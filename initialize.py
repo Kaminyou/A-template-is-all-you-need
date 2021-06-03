@@ -2,7 +2,7 @@ import json
 import os
 
 if __name__ == "__main__":
-    if not os.path.exists("config.json"):
+    if not os.path.exists("secret.json"):
         print("Please provide config.json first!")
         exit(0)
 
