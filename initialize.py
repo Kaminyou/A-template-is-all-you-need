@@ -6,7 +6,7 @@ if __name__ == "__main__":
         print("Please provide config.json first!")
         exit(0)
 
-    with open("config.json") as f:
+    with open("secret.json") as f:
         config = json.load(f)
 
     # download PASCAL3D+
