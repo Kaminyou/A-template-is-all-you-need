@@ -26,3 +26,12 @@ Alternatively, run
 bash download_partial_data.sh
 ```
 to get both the two files at once.
+
+Data Layouts
+
+<data_source_name>/
+    .datasources.json
+    SdfSamples/
+        <dataset_name>/
+            <class_name>/
+                <instance_name>.npz
