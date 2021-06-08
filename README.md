@@ -44,3 +44,11 @@ to get both the two files at once.
                           .
                               
 ```
+## Training
+
+```python
+python train_deep_implicit_templates.py -e examples/cars_dit --debug --batch_split 2 -d ./data
+```
+
+## Acknowledgements
+This code repo is heavily based on [Deep Implicit Template](https://github.com/ZhengZerong/DeepImplicitTemplates/tree/db65db3c22e0f5111236e48deab7cffb38bd60c3). We thank the authors for their great job!
