@@ -27,12 +27,20 @@ bash download_partial_data.sh
 ```
 to get both the two files at once.
 
-#Data Layouts
+######Data Layouts
 ```script
 <data_source_name>/
     .datasources.json
     SdfSamples/
         <dataset_name>/
             <class_name>/
-                <instance_name>.npz
+                <instance_name>/
+                      <instance_name>.npz
+                      <image>/
+                          XXXXXXXX.png
+                          XXXXXXXX.png
+                          .
+                          .
+                          .
+                              
 ```
