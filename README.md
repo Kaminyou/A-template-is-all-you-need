@@ -27,7 +27,7 @@ bash download_chairs_train.sh [data_source_name]
 where `[data_source_name]` should be the path to yor dataset folder. 
 To be more explicit, it should be the parent folder of `SdfSamples`. 
 Therefore, before running this script, please make sure that all the other data has been prepared 
-and the folder structure is the same as the one specified [Data Layouts](https://github.com/Kaminyou/Template-is-all-you-need#data-layouts).     
+and the folder structure is the same as the one specified in [Data Layouts](https://github.com/Kaminyou/Template-is-all-you-need#data-layouts).     
 
 For example, run  
 ```bash
