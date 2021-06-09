@@ -16,16 +16,23 @@ python3 initialize.py
 ```
 
 ## Downloading data
-The partial data of chairs (03001627) has been uploaded.  
-`data.tar.gz` can be downloaded from 
-[this link](https://drive.google.com/file/d/1xf8V3aHtaTNdl6Gq8inBu15MpYSHNzWa/view?usp=sharing), 
-and the corresponding file `sv2_chairs_train_partial.json` is provided 
-[here](https://drive.google.com/file/d/1ZZ0JBGgCotW4YwBsaZpkhomlzpJDfukB/view?usp=sharing).  
-Alternatively, run 
+The training data of chairs `03001627_train.tar.gz` can be downloaded from 
+[this link](https://drive.google.com/file/d/17j9uOb3cVXm4sqHcRcgkPBFdCmsYAv3J/view?usp=sharing). 
+There will be a folder named `03001627` when the file is extracted.  
+
+To download the file and merge all the extracted data to your dataset folder, run  
 ```bash
-bash download_partial_data.sh
-```
-to get both the two files at once.
+bash download_chairs_train.sh [data_source_name]  
+```  
+where `[data_source_name]` should be the path to yor dataset folder. 
+To be more explicit, it should be the parent folder of `SdfSamples`. 
+Therefore, before running this script, please make sure that all the other data has been prepared 
+and the folder structure is the same as the one specified [Data Layouts](https://github.com/Kaminyou/Template-is-all-you-need#data-layouts).     
+
+For example, run  
+```bash
+bash download_chairs_train.sh data  
+```  
 
 ###### Data Layouts
 ```script
