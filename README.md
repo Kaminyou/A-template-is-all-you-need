@@ -31,7 +31,7 @@ and the folder structure is the same as the one specified [Data Layouts](https:/
 
 For example, run  
 ```bash
-bash download_chairs_train.sh data  
+bash download_chairs_train.sh data/  
 ```  
 
 ###### Data Layouts
