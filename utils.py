@@ -26,9 +26,7 @@ def get_encoder(base_encoder_name, contrastive_framework, **kwargs):
     }        
     from importlib import import_module
     module = import_module('encoders.'+contrastive_framework)
-    framework = getattr(module, class_map[contrastive_framework])
-    
-    
+    framework = getattr(module, class_map[contrastive_framework])    
     encoder = framework(base_encoder, **kwargs)
     
     return encoder
