@@ -15,6 +15,29 @@ Template is all you need: 2D to 3D reconstruction with template learned by contr
 python3 initialize.py
 ```
 
+## Render 2D images
+The code is heavily based on [link](https://github.com/Xharlie/ShapenetRender_more_variation). However, only `images` and `albedo` defined there will be generated. You **should build the environment accurately first to avoid any erroneous 2D image rendering**!
+1. Download [blender](https://download.blender.org/release/Blender2.79/) v2.79. You **must use v2.79** because some functions are deprecated in the latest version.
+2. Test if the command `blender` works or not.
+```script
+blender
+```
+3. Install OpenCV in the blender python env. Please (cd) to [blender]/2.79/python/bin
+```script
+./python3.5m -m ensurepip
+./python3.5m -m pip install --upgrade pip
+./python3.5m -m pip install opencv-python
+./python3.5m -m pip install opencv-contrib-python
+```
+4. Try to `import numpy` in this python env. If there is any error, re-install numpy by **deleting the numpy folder in the following path `[blender]/2.79/python/lib/site-packages/`**. Then,
+```script
+./python3.5m -m pip install numpy
+```
+5. Start generate the 2D images by the following command. Please notice that the `jsons_root` denotes `./examples/splits/`, `data_root` denotes `ShapeNetCore.v2/`, and `output_root` is where you want to save the 2D images.
+```script
+python batch.py --jsons_root $jsons_root --data_root $data_root --output_root $output_root
+```
+
 ## Downloading data
 The training data of chairs `03001627_train.tar.gz` can be downloaded from 
 [this link](https://drive.google.com/file/d/17j9uOb3cVXm4sqHcRcgkPBFdCmsYAv3J/view?usp=sharing). 
