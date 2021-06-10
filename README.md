@@ -51,6 +51,13 @@ bash download_chairs_train.sh data/
                           .
                               
 ```
+
+## Encoders
+
+Encoders that apply different contrastive learning frameworks can be found in 
+the folder `encoders`.  
+For more details please refer to [ENCODER.md](encoders/ENCODER.md).  
+
 ## Training
 
 ```python
