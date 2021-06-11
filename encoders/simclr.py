@@ -5,12 +5,12 @@ import torch.nn.functional as F
 
 class SimCLR(nn.Module):
 
-    def __init__(self, base_encoder, low_dim=128, temperature=0.07):
+    def __init__(self, base_encoder, low_dim=128, T=0.07, pretrained=True, **kwargs):
         super(SimCLR, self).__init__()
         
-        self.encoder = base_encoder(low_dim=low_dim)
+        self.encoder = base_encoder(low_dim=low_dim, pretrained=pretrained)
         self.criterion = nn.CrossEntropyLoss()
-        self.temperature = temperature
+        self.T = T
 
     def info_nce_loss(self, features):
 
@@ -35,7 +35,7 @@ class SimCLR(nn.Module):
         logits = torch.cat([positives, negatives], dim=1)
         labels = torch.zeros(logits.shape[0], dtype=torch.long).cuda()
 
-        logits = logits / self.temperature
+        logits = logits / self.T
         loss = self.criterion(logits, labels)
         return loss
 

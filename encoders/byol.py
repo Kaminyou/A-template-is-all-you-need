@@ -6,8 +6,6 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 
-from torchvision import transforms as T
-
 # helper functions
 
 
@@ -32,8 +30,6 @@ def set_requires_grad(model, val):
 # loss fn
 
 def loss_fn(x, y):
-    x = F.normalize(x, dim=-1, p=2)
-    y = F.normalize(y, dim=-1, p=2)
     return 2 - 2 * (x * y).sum(dim=-1)
 
 # augmentation utils
@@ -86,19 +82,22 @@ class BYOL(nn.Module):
     def __init__(
         self,
         base_encoder,
-        low_dim=256,
-        moving_average_decay=0.99,
-        use_momentum=True
+        low_dim=128,
+        m=0.99,
+        use_momentum=True,
+        pretrained=True,
+        **kwargs
     ):
         super().__init__()
         
-        self.online_encoder = base_encoder(low_dim=low_dim, batch_norm=True)
+        self.online_encoder = base_encoder(low_dim=low_dim, batch_norm=True, 
+                                           pretrained=pretrained)
 
         self.use_momentum = use_momentum
         self.target_encoder = None
-        self.target_ema_updater = EMA(moving_average_decay)
+        self.target_ema_updater = EMA(m)
         
-        self.online_predictor = MLP(low_dim, low_dim, self.online_encoder.fc1.in_features)
+        self.online_predictor = MLP(low_dim, low_dim, self.online_encoder.fc[0].in_features)
 
         # instantiate singleton parameters
         self._get_target_encoder()
