@@ -12,14 +12,14 @@ class SimCLR(nn.Module):
         self.criterion = nn.CrossEntropyLoss()
         self.T = T
 
-    def info_nce_loss(self, features):
+    def info_nce_loss(self, projections):
 
-        bs = features.shape[0] // 2
+        bs = projections.shape[0] // 2
         labels = torch.cat([torch.arange(bs) for i in range(2)], dim=0)
         labels = (labels.unsqueeze(0) == labels.unsqueeze(1)).float()
         labels = labels.cuda()
 
-        similarity_matrix = torch.matmul(features, features.T)
+        similarity_matrix = torch.matmul(projections, projections.T)
 
         # discard the main diagonal from both: labels and similarities matrix
         mask = torch.eye(labels.shape[0], dtype=torch.bool).cuda()
@@ -46,7 +46,7 @@ class SimCLR(nn.Module):
         proj1, feat1 = self.encoder(img1)
         proj2, feat2 = self.encoder(img2)
         
-        feats = torch.cat([feat1, feat2], dim=0)
-        loss = self.info_nce_loss(feats)
+        projs = torch.cat([proj1, proj2], dim=0)
+        loss = self.info_nce_loss(projs)
         
         return feat1, feat2, loss
