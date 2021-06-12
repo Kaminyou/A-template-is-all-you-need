@@ -14,13 +14,20 @@ import json
 import time
 import datetime
 import random
-import torchvision.models as models
+from networks.encoder import Encoder
+import psutil
+import tqdm
+
 
 import deep_sdf
 import deep_sdf.workspace as ws
 from deep_sdf.lr_schedule import get_learning_rate_schedules
 import deep_sdf.loss as loss
 
+def check_cpu():
+    print("---------------------------------------------------")
+    print('The CPU usage is: ', psutil.cpu_percent(4))
+    return 0
 
 def get_spec_with_default(specs, key, default):
     try:
@@ -186,7 +193,7 @@ def main_function(experiment_directory, data_source, continue_from, batch_split)
         train_split = json.load(f)
 
     sdf_dataset = deep_sdf.data.SDFSamples(
-        data_source, train_split, num_samp_per_scene, load_ram=True
+        data_source, train_split, num_samp_per_scene, load_ram=False, level = 'easy'
     )
 
     if sdf_dataset.load_ram:
@@ -215,7 +222,7 @@ def main_function(experiment_directory, data_source, continue_from, batch_split)
     #===========================================================================
     #                   Use Encoder to replace embedding                       #
     #===========================================================================
-    encoder = models.resnet18(pretrained=True).cuda()
+    encoder = Encoder(latent_size=latent_size).cuda()
 
 
     loss_l1 = torch.nn.L1Loss(reduction="sum")
@@ -328,17 +335,23 @@ def main_function(experiment_directory, data_source, continue_from, batch_split)
         adjust_learning_rate(lr_schedules, optimizer_all, epoch)
 
         batch_num = len(sdf_loader)
-        for bi, (sdf_data, images, indices) in enumerate(sdf_loader):
+        loader = tqdm.tqdm(sdf_loader,desc="training epoch {}".format(epoch), position=0, leave=True)
+        for bi, (sdf_data, images, indices) in enumerate(loader):
+            #===========Input==============
+            #sdf_data: (B, N, 4)
+            #images: (B, 3, W, H)
+            #indices: (B)
+            #==============================
 
             # Process the input data
-            sdf_data = sdf_data.reshape(-1, 4)
+            sdf_data = sdf_data.reshape(-1, 4)  #(B*N, 4)
 
-            num_sdf_samples = sdf_data.shape[0]
+            num_sdf_samples = sdf_data.shape[0]  #(B*N)
 
             sdf_data.requires_grad = False
 
-            xyz = sdf_data[:, 0:3]
-            sdf_gt = sdf_data[:, 3].unsqueeze(1)
+            xyz = sdf_data[:, 0:3]                #(B*N, 3)   
+            sdf_gt = sdf_data[:, 3].unsqueeze(1)  #(B*N)
 
             if enforce_minmax:
                 sdf_gt = torch.clamp(sdf_gt, minT, maxT)
@@ -348,6 +361,8 @@ def main_function(experiment_directory, data_source, continue_from, batch_split)
                 indices.unsqueeze(-1).repeat(1, num_samp_per_scene).view(-1),
                 batch_split,
             )
+            #w, h = images.shape[-2], images.shape[-1]
+            #images = torch.chunk(images.repeat(1, num_samp_per_scene,1,1,1).view(-1, 3, w, h), batc)
 
             sdf_gt = torch.chunk(sdf_gt, batch_split)
             images = torch.chunk(images, batch_split)
@@ -365,8 +380,9 @@ def main_function(experiment_directory, data_source, continue_from, batch_split)
                 input_imgs = images[i].cuda()
                 batch_vecs = encoder(input_imgs)
 
-                input = torch.cat([batch_vecs, xyz[i]], dim=1)
                 xyz_ = xyz[i].cuda()
+                batch_vecs = batch_vecs.unsqueeze(1).repeat(1, num_samp_per_scene, 1).view(-1, latent_size)
+                input = torch.cat([batch_vecs, xyz_], dim=1)
 
                 # NN optimization
                 warped_xyz_list, pred_sdf_list, _ = decoder(

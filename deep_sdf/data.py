@@ -16,7 +16,7 @@ import torchvision.transforms as transforms
 import deep_sdf.workspace as ws
 
 
-def get_instance_filenames(data_source, split):
+def get_instance_filenames(data_source, split, level='easy'):
     npzfiles = []
     images = []
     for dataset in split:
@@ -33,7 +33,7 @@ def get_instance_filenames(data_source, split):
                     )
                     continue
                 #list all images
-                img_dir_path = os.path.join(data_source, ws.sdf_samples_subdir, dataset, class_name, instance_name,'image')
+                img_dir_path = os.path.join(data_source, class_name, instance_name, level, 'image_rgb')
                 for img in glob.glob(os.path.join(img_dir_path, '*.png')):
                     images.append(img)
                     npzfiles += [instance_filename]
@@ -127,6 +127,7 @@ def unpack_sdf_samples_from_ram(data, subsample=None):
     samples = torch.index_select(samples, 0, randidx)
 
     return samples
+
 def read_image(img_path):
     img = Image.open(img_path)
 
@@ -135,8 +136,11 @@ def read_image(img_path):
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])
-    image = img.unsqueeze(0)
-    return image
+
+    img = transform(img)
+    #image = img.unsqueeze(0)
+
+    return img
 
 class SDFSamples(torch.utils.data.Dataset):
     def __init__(
@@ -147,11 +151,12 @@ class SDFSamples(torch.utils.data.Dataset):
         load_ram=False,
         print_filename=False,
         num_files=1000000,
+        level = 'easy'
     ):
         self.subsample = subsample
 
         self.data_source = data_source
-        self.images, self.npyfiles = get_instance_filenames(data_source, split)
+        self.images, self.npyfiles = get_instance_filenames(data_source, split, level=level)
         
 
         logging.debug(
@@ -188,7 +193,7 @@ class SDFSamples(torch.utils.data.Dataset):
         img_filename = self.images[idx]
         if self.load_ram:
             return (
-                unpack_sdf_samples_from_ram(self.loaded_data[idx], self.subsample),
+                unpack_sdf_samples_from_ram(self.loaded_data[idx], self.subsample), read_image(img_filename),
                 idx,
             )
         else:
