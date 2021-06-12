@@ -19,6 +19,7 @@ import psutil
 import tqdm
 
 
+
 import deep_sdf
 import deep_sdf.workspace as ws
 from deep_sdf.lr_schedule import get_learning_rate_schedules
@@ -37,7 +38,7 @@ def get_spec_with_default(specs, key, default):
 
 
 def get_mean_latent_vector_magnitude(latent_vectors):
-    return torch.mean(torch.norm(latent_vectors.weight.data.detach(), dim=1))
+    return torch.mean(torch.norm(latent_vectors.detach(), dim=1))
 
 
 def append_parameter_magnitudes(param_mag_log, model):
