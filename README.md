@@ -66,12 +66,17 @@ bash download_chairs_train.sh data/
             <class_name>/
                 <instance_name>/
                       <instance_name>.npz
-                      <image>/
-                          XXXXXXXX.png
-                          XXXXXXXX.png
-                          .
-                          .
-                          .
+    <class_name>/         
+        <instance_name>/
+            <easy/hard>
+                 <image>/
+                     XXXXXXXX.png
+                     XXXXXXXX.png
+                     .
+                 <image_rgb>/
+                     XXXXXXXX.png
+                     XXXXXXXX.png
+                     .
                               
 ```
 
