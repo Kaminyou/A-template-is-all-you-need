@@ -56,8 +56,11 @@ For example, run
 ```bash
 bash download_chairs_train.sh data/  
 ```  
-
-###### Data Layouts
+## Covert 2D image from RGBA to RGB
+```python
+python rgba2rgb.py -d [data_source] -c 'chairs', --level 'easy'
+```
+## Data Layouts
 ```script
 <data_source_name>/
     .datasources.json
