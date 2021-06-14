@@ -141,7 +141,7 @@ An example of `config.yaml` can be found [here](contrastive/config.yaml).
 To use the pretrained weights for the later deep implicit templates training, please refer to 
 [ENCODER.md](contrastive/encoders/ENCODER.md).
 
-## generate meshes
+## Generate meshes
 
 ```python
 GPU_ID=0
