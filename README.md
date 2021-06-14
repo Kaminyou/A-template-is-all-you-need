@@ -86,14 +86,27 @@ python rgba2rgb.py -d [data_source] -c 'chairs', --level 'easy'
 ## Encoders
 
 Encoders that apply different contrastive learning frameworks can be found in 
-the folder `encoders`.  
-For more details please refer to [ENCODER.md](encoders/ENCODER.md).  
+the folder `contrastive/encoders`.  
+For more details please refer to [ENCODER.md](contrastive/encoders/ENCODER.md).  
 
 ## Training
 
 ```python
 python train_deep_implicit_templates.py -e examples/cars_dit --debug --batch_split 2 -d ./data
 ```
+
+## Contrastive learning
+
+Run the following to perform contrastive learning: 
+```python
+python train_contrastive.py -e experiments/planes
+```
+
+Note that the experiment directory should include a `config.yaml` to specify the configurations. 
+An example of `config.yaml` can be found [here](contrastive/config.yaml).  
+
+To use the pretrained weights for the later deep implicit templates training, please refer to 
+[ENCODER.md](contrastive/encoders/ENCODER.md).
 
 ## Acknowledgements
 This code repo is heavily based on [Deep Implicit Template](https://github.com/ZhengZerong/DeepImplicitTemplates/tree/db65db3c22e0f5111236e48deab7cffb38bd60c3). We thank the authors for their great job!
