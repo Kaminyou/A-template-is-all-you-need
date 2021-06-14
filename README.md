@@ -141,5 +141,13 @@ An example of `config.yaml` can be found [here](contrastive/config.yaml).
 To use the pretrained weights for the later deep implicit templates training, please refer to 
 [ENCODER.md](contrastive/encoders/ENCODER.md).
 
+## generate meshes
+
+```python
+GPU_ID=0
+CUDA_VISIBLE_DEVICES=${GPU_ID} python generate_template_mesh.py -e pretrained/sofas_dit --debug 
+CUDA_VISIBLE_DEVICES=${GPU_ID} python generate_training_meshes.py -e pretrained/sofas_dit --debug --start_id 0 --end_id 20 --octree --keep_normalization
+```
+
 ## Acknowledgements
 This code repo is heavily based on [Deep Implicit Template](https://github.com/ZhengZerong/DeepImplicitTemplates/tree/db65db3c22e0f5111236e48deab7cffb38bd60c3). We thank the authors for their great job!
