@@ -2,6 +2,7 @@ import torch
 import torchvision
 import math
 import torch.nn.functional as F
+import torch.nn as nn
 from torchvision import models
 
 class Encoder(nn.Module):
