@@ -22,7 +22,7 @@ class Encoder(nn.Module):
 
 class _Encoder(nn.Module):
     def __init__(self, name='resnet18', latent_size=256, pretrained=True):
-        super(Encoder, self).__init__()
+        super(_Encoder, self).__init__()
         
         builder = getattr(models, name)
         resnet = builder(pretrained=pretrained)
