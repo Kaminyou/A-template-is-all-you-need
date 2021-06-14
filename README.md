@@ -1,7 +1,10 @@
 # Template-is-all-you-need
 Template is all you need: 2D to 3D reconstruction with template learned by contrastive learning
 
-## Prepare
+## Prepare required data
+**You must have a GUI for 2D image and SDF rendering!!** <br>
+*Environment of Ubuntu with GUI is recommended.*
+### Prepare ShapeNet dataset
 1. Please prepare `secret.json`, which should include:
 ```json
 {"pascal_root":"path-to-save-PASCAL3D+_release1.1.zip",
@@ -15,7 +18,7 @@ Template is all you need: 2D to 3D reconstruction with template learned by contr
 python3 initialize.py
 ```
 
-## Render 2D images
+### Render 2D images
 The code is heavily based on [link](https://github.com/Xharlie/ShapenetRender_more_variation). However, only `images` and `albedo` defined there will be generated. You **should build the environment accurately first to avoid any erroneous 2D image rendering**!
 1. Download [blender](https://download.blender.org/release/Blender2.79/) v2.79. You **must use v2.79** because some functions are deprecated in the latest version.
 2. Test if the command `blender` works or not.
@@ -37,6 +40,9 @@ blender
 ```script
 python batch.py --jsons_root $jsons_root --data_root $data_root --output_root $output_root
 ```
+
+### Render ground truth SDF 
+Please refer to [link](https://blog.csdn.net/qq_38677322/article/details/110957634). In short, dependencies of `CLI11`, `Pangolin`, `nanoflann`, and `Eigen3` should be built first. However, the whole process is arduous and various bugs do exist!
 
 ## Downloading data
 The training data of chairs `03001627_train.tar.gz` can be downloaded from 
