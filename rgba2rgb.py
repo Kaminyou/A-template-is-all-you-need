@@ -1,19 +1,19 @@
 import os
 import glob
 from PIL import Image
+import argparse
 
 classes ={
-    'chairs':'03001627'
+    'planes':'02691156',
+    'cars':'02958343',
+    'chairs':'03001627',
+    'lamps':'03636649',
+    'sofas':'04256520',
+    'tables':'04379243'
 }
 
 
 if __name__ == '__main__':
-
-    data_source = './data'
-    class_name = classes['chairs']
-    level = 'easy'
-
-    import argparse
 
     arg_parser = argparse.ArgumentParser(description="Convert RGBA image to RGB")
     arg_parser.add_argument(
@@ -42,9 +42,6 @@ if __name__ == '__main__':
     class_id = classes[args.class_name]
     level = args.level
     data_source = args.data_source
-
-
-
 
     images_path = os.path.join(data_source, class_id)
     for instance_dir in glob.glob(os.path.join(images_path, '*')):
