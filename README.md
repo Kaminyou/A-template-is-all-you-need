@@ -3,7 +3,8 @@ Template is all you need: 2D to 3D reconstruction with template learned by contr
 
 ## Prepare required data
 **You must have a GUI for 2D image and SDF rendering!!** <br>
-*Environment of Ubuntu with GUI is recommended.*
+*Environment of Ubuntu with GUI is recommended.* <br>
+*If you are unable to generate required 2D images and SDF ground truth, please jump to next section. We do provide some examples for you to download*
 ### Prepare ShapeNet dataset
 1. Please prepare `secret.json`, which should include:
 ```json
@@ -44,7 +45,13 @@ python batch.py --jsons_root $jsons_root --data_root $data_root --output_root $o
 ### Render ground truth SDF 
 Please refer to [link](https://blog.csdn.net/qq_38677322/article/details/110957634). In short, dependencies of `CLI11`, `Pangolin`, `nanoflann`, and `Eigen3` should be built first. However, the whole process is arduous and various bugs do exist!
 
+### Covert 2D image from RGBA to RGB
+```python
+python rgba2rgb.py -d [data_source] -c 'chairs', --level 'easy'
+```
+
 ## Downloading data
+### Small examples
 The training data of chairs `03001627_train.tar.gz` can be downloaded from 
 [this link](https://drive.google.com/file/d/17j9uOb3cVXm4sqHcRcgkPBFdCmsYAv3J/view?usp=sharing). 
 There will be a folder named `03001627` when the file is extracted.  
@@ -62,10 +69,30 @@ For example, run
 ```bash
 bash download_chairs_train.sh data/  
 ```  
-## Covert 2D image from RGBA to RGB
-```python
-python rgba2rgb.py -d [data_source] -c 'chairs', --level 'easy'
+### Complete examples
+[gdown](https://pypi.org/project/gdown/) is recommended for downloading these pre-generated 2D images and SDF ground truth.
+```script
+pip install gdown
 ```
+#### 2D images
+```script
+gdown --id 1BORVFh5ODnyhQqGTvCFtSUFrD7XCcSOr #02691156 planes
+gdown --id 1WkyrOmvw2G3JgRutWvl_WucYn9RmFA8O #02958343 cars
+gdown --id 1M53cyqhkyPo8IZgQaDjo4qNZc9hhkSsi #03001627 chairs
+gdown --id 1NBwU309G4FT2SP_gxZzne2uADqbD4Rce #03636649 lamps
+gdown --id 1DplfrOr98VEW5xAV8jEy2yNrlOetjNGF #04256520 sofas
+gdown --id 1GetjpIDWa7NOIN06tuQQJmR0MuVKwoal #04379243 tables
+```
+#### SDF ground truth
+```script
+gdown --id 11y3A8RI4n4vlUVTDu56FO2mc7rhASjr6 #02691156 planes
+gdown --id 1_ogLvFOZTg6YFak-_WIvLneMoYYcLRvs #02958343 cars
+gdown --id 1lLm0yyrGfEjT7ye3xjbrgW7p2neYHgZ2 #03001627 chairs
+gdown --id 1ObsXX4TJjADnlyuFPVJxz00w-fZFK2ak #03636649 lamps
+gdown --id 18k8LqWlc2AYr5-gn2u_KQsodGg9macqx #04256520 sofas
+gdown --id 1TzUSNe4kAB3plnUf_ZUsxTnVgNq0gqzJ #04379243 tables
+```
+
 ## Data Layouts
 ```script
 <data_source_name>/
