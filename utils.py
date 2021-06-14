@@ -28,12 +28,43 @@ def get_encoder(base_encoder_name, contrastive_framework, **kwargs):
         'simclr': 'SimCLR',
         'moco':   'MoCo',
         'byol':   'BYOL'
-    }        
+    }
     from importlib import import_module
-    module = import_module('encoders.'+contrastive_framework)
+    module = import_module('contrastive.encoders.'+contrastive_framework)
     framework = getattr(module, class_map[contrastive_framework])
     
-    from encoders.resnet import ResNetEncoder
+    from contrastive.encoders.resnet import ResNetEncoder
     encoder = framework(ResNetEncoder, **kwargs)
     
     return encoder
+
+def load_weights_from_contrastive_learning(encoder, state_dict, contrastive_framework):
+    """
+    Loading state_dict to encoder from the model learned by a contrastive framework.
+    
+    Input:
+        - encoder: an Encoder instance from networks.encoder.
+            
+        - state_dict: the state_dict of a contrastive-learning model.
+            
+        - contrastive_framework (str): framework of the state_dict
+            choices: ['simclr', 'moco', 'byol', 'simsiam']
+    """  
+    name_map = {
+        'simclr' : 'encoder',
+        'moco'   : 'encoder_q',
+        'byol'   : 'online_encoder',
+        'simsiam': 'online_encoder'
+    }
+    
+    encoder_name = name_map[contrastive_framework]
+    for k in list(state_dict.keys()):
+        # retain only encoder up to before the embedding layer
+        if k.startswith(encoder_name) and not k.startswith(encoder_name+'.fc'):
+            # remove prefix
+            state_dict[k[len(encoder_name+'.'):]] = state_dict[k]
+        # delete renamed or unused k
+        del state_dict[k]
+        
+    msg = encoder.load_state_dict(state_dict, strict=False)
+    assert set(msg.missing_keys) == {"fc.weight", "fc.bias"}
