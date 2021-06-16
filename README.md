@@ -126,7 +126,8 @@ For more details please refer to [ENCODER.md](contrastive/encoders/ENCODER.md).
 ```script
 python train_deep_implicit_templates.py -e examples/cars_dit --debug --batch_split 2 -d ./data
 ```
-**To expedite training, the mixed precision mode is provided:**
+**To expedite training, the mixed precision mode is provided:**<br>
+*Package [apex](https://pypi.org/project/apex/) is required! Please make sure that you have installed it first!*
 ```script
 python train_deep_implicit_templates.py -e examples/cars_dit --debug --batch_split 2 -d ./data --mixed_precision --mixed_precision_level O1
 ```
