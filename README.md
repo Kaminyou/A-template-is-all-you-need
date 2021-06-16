@@ -126,7 +126,8 @@ For more details please refer to [ENCODER.md](contrastive/encoders/ENCODER.md).
 ```script
 python train_deep_implicit_templates.py -e examples/cars_dit --debug --batch_split 2 -d ./data
 ```
-**To expedite training, the mixed precision mode is provided:**
+**To expedite training, the mixed precision mode is provided:**<br>
+*Package [apex](https://pypi.org/project/apex/) is required! Please make sure that you have installed it first!*
 ```script
 python train_deep_implicit_templates.py -e examples/cars_dit --debug --batch_split 2 -d ./data --mixed_precision --mixed_precision_level O1
 ```
@@ -136,7 +137,11 @@ Plese note that `mixed_precision_level` has three options, `O0`, `O1`, `O2`, `O3
 - `O2`: “Almost FP16” Mixed Precision
 - `O3`: FP16 training
 
-For more information, please refer to the [official document](https://nvidia.github.io/apex/amp.html).
+For more information, please refer to the [official document](https://nvidia.github.io/apex/amp.html).<br>
+If you cannot successfully install `apex` from pypl. Please refer to [link](https://stackoverflow.com/questions/66610378/unencryptedcookiesessionfactoryconfig-error-when-importing-apex) to build from source, and add argument to indicate where your `apex` is.
+```script
+--apex_path path_to_apex
+```
 ## Contrastive learning
 
 Run the following to perform contrastive learning: 

@@ -210,6 +210,8 @@ def main_function(experiment_directory, data_source, continue_from, batch_split)
     logging.info(decoder)
 
     try:
+        if args.apex_path:
+            sys.path.append(args.apex_path)
         from apex import amp
         apex_support = True
     except:
@@ -546,6 +548,12 @@ if __name__ == "__main__":
         dest="mixed_precision_level",
         default="O1",
         help="O0->fp32; O1->mix fp16 &fp32; O2->fp16; O3->force fp16"
+    )
+    arg_parser.add_argument(
+        "--apex_path",
+        dest="apex_path",
+        default=None,
+        help="path to import apex"
     )
 
     deep_sdf.add_common_args(arg_parser)
