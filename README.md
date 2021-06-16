@@ -46,7 +46,7 @@ python batch.py --jsons_root $jsons_root --data_root $data_root --output_root $o
 Please refer to [link](https://blog.csdn.net/qq_38677322/article/details/110957634). In short, dependencies of `CLI11`, `Pangolin`, `nanoflann`, and `Eigen3` should be built first. However, the whole process is arduous and various bugs do exist!
 
 ### Covert 2D image from RGBA to RGB
-```python
+```script
 python rgba2rgb.py -d [data_source] -c 'chairs', --level 'easy'
 ```
 
@@ -135,11 +135,12 @@ Plese note that `mixed_precision_level` has three options, `O0`, `O1`, `O2`, `O3
 - `O1`: Mixed Precision (recommended for typical use)
 - `O2`: “Almost FP16” Mixed Precision
 - `O3`: FP16 training
+
 For more information, please refer to the [official document](https://nvidia.github.io/apex/amp.html).
 ## Contrastive learning
 
 Run the following to perform contrastive learning: 
-```python
+```script
 python train_contrastive.py -e experiments/planes
 ```
 
@@ -151,7 +152,7 @@ To use the pretrained weights for the later deep implicit templates training, pl
 
 ## Generate meshes
 
-```python
+```script
 GPU_ID=0
 CUDA_VISIBLE_DEVICES=${GPU_ID} python generate_template_mesh.py -e pretrained/sofas_dit --debug 
 CUDA_VISIBLE_DEVICES=${GPU_ID} python generate_training_meshes.py -e pretrained/sofas_dit --debug --start_id 0 --end_id 20 --octree --keep_normalization
