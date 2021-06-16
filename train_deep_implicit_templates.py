@@ -17,6 +17,7 @@ import random
 from networks.encoder import Encoder
 import psutil
 import tqdm
+import argparse
 
 import deep_sdf
 import deep_sdf.workspace as ws
@@ -34,10 +35,8 @@ def get_spec_with_default(specs, key, default):
     except KeyError:
         return default
 
-
 def get_mean_latent_vector_magnitude(latent_vectors):
     return torch.mean(torch.norm(latent_vectors.detach(), dim=1))
-
 
 def append_parameter_magnitudes(param_mag_log, model):
     for name, param in model.named_parameters():
@@ -46,7 +45,6 @@ def append_parameter_magnitudes(param_mag_log, model):
         if name not in param_mag_log.keys():
             param_mag_log[name] = []
         param_mag_log[name].append(param.data.norm().item())
-
 
 def apply_curriculum_l1_loss(pred_sdf_list, sdf_gt, loss_l1_soft, num_sdf_samples):
     soft_l1_eps_list = [2.5e-2, 1e-2, 2.5e-3, 0]
@@ -61,7 +59,6 @@ def apply_curriculum_l1_loss(pred_sdf_list, sdf_gt, loss_l1_soft, num_sdf_sample
     sdf_loss = sum(sdf_loss) / len(sdf_loss)
     return sdf_loss
 
-
 def apply_pointwise_reg(warped_xyz_list, xyz_, huber_fn, num_sdf_samples):
     pw_loss = []
     for k in range(len(warped_xyz_list)):
@@ -70,7 +67,6 @@ def apply_pointwise_reg(warped_xyz_list, xyz_, huber_fn, num_sdf_samples):
         # pw_loss.append(torch.sum((warped_xyz_list[k] - xyz_) ** 2) / num_sdf_samples)
     pw_loss = sum(pw_loss) / len(pw_loss)
     return pw_loss
-
 
 def apply_pointpair_reg(warped_xyz_list, xyz_, loss_lp, scene_per_split, num_sdf_samples):
     delta_xyz = warped_xyz_list[-1] - xyz_
@@ -133,14 +129,12 @@ def main_function(experiment_directory, data_source, continue_from, batch_split)
         logging.debug("clipping gradients to max norm {}".format(grad_clip))
 
     def save_latest(epoch):
-
         ws.save_model(experiment_directory, "latest.pth", decoder, epoch)
         ws.save_optimizer(experiment_directory, "latest_encoder.pth", optimizer_encoder, epoch)
         ws.save_optimizer(experiment_directory, "latest_decoder.pth", optimizer_decoder, epoch)
         ws.save_latent_vectors(experiment_directory, "latest.pth", encoder, epoch)
 
     def save_checkpoints(epoch):
-
         ws.save_model(experiment_directory, str(epoch) + ".pth", decoder, epoch)
         ws.save_optimizer(experiment_directory, str(epoch) + "_encoder.pth", optimizer_encoder, epoch)
         ws.save_optimizer(experiment_directory, str(epoch) + "_decoder.pth", optimizer_decoder, epoch)
@@ -151,7 +145,6 @@ def main_function(experiment_directory, data_source, continue_from, batch_split)
         sys.exit(0)
 
     def adjust_learning_rate(lr_schedules, optimizer, epoch):
-
         for i, param_group in enumerate(optimizer.param_groups):
             param_group["lr"] = lr_schedules[i].get_learning_rate(epoch)
 
@@ -227,7 +220,6 @@ def main_function(experiment_directory, data_source, continue_from, batch_split)
     #                   Use Encoder to replace embedding                       #
     #===========================================================================
     encoder = Encoder(latent_size=latent_size).cuda()
-
 
     loss_l1 = torch.nn.L1Loss(reduction="sum")
     loss_l1_soft = loss.SoftL1Loss(reduction="sum")
@@ -502,13 +494,10 @@ def main_function(experiment_directory, data_source, continue_from, batch_split)
                 epoch,
             )
 
-
 if __name__ == "__main__":
     random.seed(31359)
     torch.random.manual_seed(31359)
     np.random.seed(31359)
-
-    import argparse
 
     arg_parser = argparse.ArgumentParser(description="Train a DeepSDF autodecoder")
     arg_parser.add_argument(
@@ -559,12 +548,10 @@ if __name__ == "__main__":
         help="O0->fp32; O1->mix fp16 &fp32; O2->fp16; O3->force fp16"
     )
 
-
-
     deep_sdf.add_common_args(arg_parser)
 
     args = arg_parser.parse_args()
-
+    
     deep_sdf.configure_logging(args)
-
+    
     main_function(args.experiment_directory, args.data_source, args.continue_from, int(args.batch_split))

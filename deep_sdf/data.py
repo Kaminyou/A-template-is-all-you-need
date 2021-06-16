@@ -198,4 +198,4 @@ class SDFSamples(torch.utils.data.Dataset):
                 idx,
             )
         else:
-            return unpack_sdf_samples(filename, self.subsample), read_image(img_filename),idx
+            return unpack_sdf_samples(filename, self.subsample), read_image(img_filename), idx
