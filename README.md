@@ -123,11 +123,19 @@ the folder `contrastive/encoders`.
 For more details please refer to [ENCODER.md](contrastive/encoders/ENCODER.md).  
 
 ## Training
-
-```python
+```script
 python train_deep_implicit_templates.py -e examples/cars_dit --debug --batch_split 2 -d ./data
 ```
-
+**To expedite training, the mixed precision mode is provided:**
+```script
+python train_deep_implicit_templates.py -e examples/cars_dit --debug --batch_split 2 -d ./data --mixed_precision --mixed_precision_level O1
+```
+Plese note that `mixed_precision_level` has three options, `O0`, `O1`, `O2`, `O3`, corresponding to different settings. 
+- `O0`: FP32 training
+- `O1`: Mixed Precision (recommended for typical use)
+- `O2`: “Almost FP16” Mixed Precision
+- `O3`: FP16 training
+For more information, please refer to the [official document](https://nvidia.github.io/apex/amp.html).
 ## Contrastive learning
 
 Run the following to perform contrastive learning: 
