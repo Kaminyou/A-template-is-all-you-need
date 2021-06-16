@@ -110,12 +110,12 @@ def main(args):
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
         }
-        save_path = os.path.join(checkpoint_dir, f'checkpont_latest.pt')
+        save_path = os.path.join(checkpoint_dir, f'checkpoint_latest.pt')
         torch.save(checkpoint, save_path)
         
         # save checkpoint
         if (i_epoch+1) % cfg['save_every'] == 0:
-            save_path = os.path.join(checkpoint_dir, f'checkpont_{i_epoch}.pt')
+            save_path = os.path.join(checkpoint_dir, f'checkpoint_{i_epoch}.pt')
             torch.save(checkpoint, save_path)
     
 
