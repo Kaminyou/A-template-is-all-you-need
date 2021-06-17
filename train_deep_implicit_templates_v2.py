@@ -257,6 +257,8 @@ def main_function(experiment_directory, data_source, continue_from, batch_split)
             },
         ]
     )
+    
+    scaler = torch.cuda.amp.GradScaler(enabled=ws.use_amp)
 
     tensorboard_saver = ws.create_tensorboard_saver(experiment_directory)
 
@@ -325,9 +327,7 @@ def main_function(experiment_directory, data_source, continue_from, batch_split)
             sum(p.data.nelement() for p in encoder.parameters())
         )
     )
-
-    scaler = torch.cuda.amp.GradScaler(enabled=ws.use_amp)
-
+    
     use_curriculum = get_spec_with_default(specs, "UseCurriculum", False)
 
     use_pointwise_loss = get_spec_with_default(specs, "UsePointwiseLoss", False)
