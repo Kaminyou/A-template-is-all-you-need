@@ -142,6 +142,32 @@ If you cannot successfully install `apex` from pypl. Please refer to [link](http
 ```script
 --apex_path path_to_apex
 ```
+
+### Updates
+
+```script
+python train_deep_implicit_templates_v2.py \
+-e examples/cars_dit \
+--debug \
+--batch_split 2 \
+-d ./data \
+[--mixed_precision] \
+[--pretrained_weights exps/checkpoints/checkpont_latest.pt]
+```  
+`train_deep_implicit_templates_v2.py` contains a few updates compared to the original one, including:  
+1. start training with weights obtained from contrastive learning.  
+    - please use `--pretrained_weights` to specify the path to the checkpoint obtained from `train_contrastive.py`.
+    - here a slightly different encoder `_Encoder` (check it out in [`networks/encoder.py`](networks/encoder.py)) 
+      is used for easy weight transfer.
+2. use [torch.cuda.amp](https://pytorch.org/docs/stable/amp.html) for mixed precision training.
+    - please add `--mixed_precision` to enable such feature.
+3. train with a dataset that includes both hard and easy 2d images.
+    - if you want to train with certain level of difficulty instead, please modify `*` to `easy/hard` in 
+      [this line](train_deep_implicit_templates_v2.py#L199).  
+      
+We can eventually replace `train_deep_implicit_templates.py` with `train_deep_implicit_templates_v2.py` if everyone has 
+no problem running this version of training code.  
+
 ## Contrastive learning
 
 Run the following to perform contrastive learning: 
