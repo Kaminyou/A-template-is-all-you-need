@@ -115,6 +115,12 @@ gdown --id 1TzUSNe4kAB3plnUf_ZUsxTnVgNq0gqzJ #04379243 tables
                      .
                               
 ```
+## Extract pretrained embedding
+Please use `extract_embedding.py` in the environment of [Deep Implicit Template](https://github.com/ZhengZerong/DeepImplicitTemplates/tree/db65db3c22e0f5111236e48deab7cffb38bd60c3). This code will automatically extract the embedding from the pretrained `Embedding` weights and store in a dictionary, which can be accessed by the `instance_name`.
+```
+python generate_training_meshes.py -e ./pretrained/${obj}_dit
+```
+We also provided the pre-extracted one in `./pretrained_embedding/` folder.
 
 ## Encoders
 
