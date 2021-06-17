@@ -82,7 +82,7 @@ def load_encoder_parameters(experiment_directory, checkpoint, encoder):
 
     data = torch.load(filename)
 
-    decoder.load_state_dict(data["latent_codes"])
+    encoder.load_state_dict(data["latent_codes"])
 
     return data["epoch"]
 
