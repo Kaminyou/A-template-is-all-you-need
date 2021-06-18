@@ -151,6 +151,7 @@ class SDFSamples(torch.utils.data.Dataset):
         subsample,
         load_ram=False,
         print_filename=False,
+        analysis_mode = False,
         num_files=1000000,
         level = 'easy'
     ):
@@ -168,6 +169,7 @@ class SDFSamples(torch.utils.data.Dataset):
         )
 
         self.load_ram = load_ram
+        self.analysis_mode = analysis_mode
 
         if load_ram:
             self.loaded_data = []
@@ -193,9 +195,18 @@ class SDFSamples(torch.utils.data.Dataset):
 
         img_filename = self.images[idx]
         if self.load_ram:
-            return (
-                unpack_sdf_samples_from_ram(self.loaded_data[idx], self.subsample), read_image(img_filename),
-                idx,
-            )
+            if self.analysis_mode:
+                eturn (
+                    unpack_sdf_samples_from_ram(self.loaded_data[idx], self.subsample), read_image(img_filename),
+                    idx, img_filename
+                )
+            else:
+                return (
+                    unpack_sdf_samples_from_ram(self.loaded_data[idx], self.subsample), read_image(img_filename),
+                    idx,
+                )
         else:
-            return unpack_sdf_samples(filename, self.subsample), read_image(img_filename), idx
+            if self.analysis_mode:
+                return unpack_sdf_samples(filename, self.subsample), read_image(img_filename), idx, img_filename
+            else:
+                return unpack_sdf_samples(filename, self.subsample), read_image(img_filename), idx

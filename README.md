@@ -195,5 +195,16 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python generate_template_mesh.py -e pretrained/so
 CUDA_VISIBLE_DEVICES=${GPU_ID} python generate_training_meshes.py -e pretrained/sofas_dit --debug --start_id 0 --end_id 20 --octree --keep_normalization
 ```
 
+## Analyze
+1. To analyze the pretrained embedding
+```
+python analyze.py -e examples/sofas_dit -p --thread 16
+```
+2. To analyze the embedding yield from own encoder
+- *`early_stop` is to prevent the time-consuming inference process and only extract some data for analysis*
+```
+python analyze.py -e examples/sofas_dit -d $data_path -c latest --early_stop 20 --thread 16
+```
+
 ## Acknowledgements
 This code repo is heavily based on [Deep Implicit Template](https://github.com/ZhengZerong/DeepImplicitTemplates/tree/db65db3c22e0f5111236e48deab7cffb38bd60c3). We thank the authors for their great job!
