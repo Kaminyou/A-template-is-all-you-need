@@ -66,7 +66,7 @@ def main_function(experiment_directory, data_source, continue_from, batch_split,
     with open(train_split_file, "r") as f:
         train_split = json.load(f)
 
-    embedding_dataset = EmbeddingSet(data_source, experiment_directory, train_split, checkpoint='latest', level = 'easy')
+    embedding_dataset = EmbeddingSet(data_source, train_split, level = 'easy')
 
     embedding_loader = data_utils.DataLoader(
         embedding_dataset,
@@ -166,7 +166,7 @@ def main_function(experiment_directory, data_source, continue_from, batch_split,
 
             optimizer.zero_grad()
             batch_embedding = encoder(input_imgs)
-            batch_embedding = torch.clamp(batch_embedding, max = code_bound)
+            #batch_embedding = torch.clamp(batch_embedding, max = code_bound)
             batch_loss = loss_l1(batch_embedding, embedding_gt)
             batch_loss.backward()
 

@@ -5,9 +5,10 @@ import glob
 import deep_sdf.workspace as ws
 from PIL import Image
 import torchvision.transforms as transforms
+import pickle
 
 def get_instance_files(data_source, split, level='easy'):
-    embedding_ids =[]
+    instance_names =[]
 
     images = []
     for dataset in split:
@@ -24,9 +25,9 @@ def get_instance_files(data_source, split, level='easy'):
                     continue        
                 for img in img_path_list:
                     images.append(img)
-                    embedding_ids.append(i)
+                    instance_names.append(instance_name)
 
-    return images, embedding_ids
+    return images, instance_names
 
 def read_image(img_path):
     img = Image.open(img_path)
@@ -42,37 +43,40 @@ def read_image(img_path):
 
     return img
 
-
 class EmbeddingSet(torch.utils.data.Dataset):
     def __init__(
         self,
         data_source,
-        experiment_directory,
         split,
-        checkpoint,
-        level = 'easy'
+        level = 'easy',
+        pretrain_embedding_folder = "./pretrained_embedding/"
     ):
-
+        
+        self.pretrain_embedding_folder = pretrain_embedding_folder
+        self.__load_embedding(split)
 
         self.data_source = data_source
         #get latent_vector groundtruth
-        latent_vectors = ws.load_pre_trained_latent_vectors(experiment_directory, checkpoint)
-        self.latent_vectors = latent_vectors
         
-        self.instance_images, self.embedding_ids = get_instance_files(data_source, split, level=level)
+        self.instance_images, self.instance_names = get_instance_files(data_source, split, level=level)
      
+        logging.debug(f"load {len(self.embedding_dict)} embeddings and load {len(set(self.instance_names))} instance")
+        assert (len(set(self.instance_names)) == len(self.embedding_dict))
     
-        logging.debug(
-            "using "
-            + str(len(self.latent_vectors))
-            + " shapes from data source "
-            + data_source
-        )
-
+    def __load_embedding(self, split):
+        for dataset in split:
+            for class_name in split[dataset]:
+                self.class_name = class_name
+                break
+                
+        with open(os.path.join(self.pretrain_embedding_folder, f"{self.class_name}_embedding.pkl"), 'rb') as f:
+            embedding_dict = pickle.load(f)
+        self.embedding_dict = embedding_dict
 
     def __len__(self):
         return len(self.instance_images)
 
     def __getitem__(self, idx):
         img_filename = self.instance_images[idx]
-        return read_image(img_filename), self.latent_vectors[self.embedding_ids[idx]]
+        img_instance = self.instance_names[idx]
+        return read_image(img_filename), self.embedding_dict[img_instance]
