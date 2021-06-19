@@ -15,8 +15,8 @@ class Encoder(nn.Module):
         self.layers = list(self.encoder.children())[:-1]
         self.feature_extractor = torch.nn.Sequential(*self.layers)
         
-        for param in self.feature_extractor.parameters():
-            param.requires_grad = False
+        #for param in self.feature_extractor.parameters():
+        #    param.requires_grad = False
         
         self.encoder.fc = torch.nn.Linear(self.encoder.fc.in_features,latent_size)
 
