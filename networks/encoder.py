@@ -9,14 +9,15 @@ from torch.cuda.amp import autocast
 import deep_sdf.workspace as ws
 
 class Encoder(nn.Module):
-    def __init__(self, latent_size):
+    def __init__(self, latent_size, fix_feature_extraction_layer=True):
         super(Encoder, self).__init__()
         self.encoder = models.resnet18(pretrained=True)
         self.layers = list(self.encoder.children())[:-1]
         self.feature_extractor = torch.nn.Sequential(*self.layers)
         
-        #for param in self.feature_extractor.parameters():
-        #    param.requires_grad = False
+        if fix_feature_extraction_layer:
+            for param in self.feature_extractor.parameters():
+                param.requires_grad = False
         
         self.encoder.fc = torch.nn.Linear(self.encoder.fc.in_features,latent_size)
 
