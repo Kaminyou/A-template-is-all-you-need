@@ -6,7 +6,7 @@ import logging
 import datetime
 import os
 import json
-from embedding_dataset import EmbeddingSet
+from reconstruction.embedding_dataset import EmbeddingSet
 import torch.utils.data as data_utils
 from networks.encoder import Encoder
 import time
