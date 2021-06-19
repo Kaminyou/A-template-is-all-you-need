@@ -55,13 +55,13 @@ def main_function(experiment_directory, data_source, continue_from, batch_split,
     latent_size = specs["CodeLength"]
     code_bound = get_spec_with_default(specs, "CodeBound", None)
     def save_latest(epoch):
-        ws.save_optimizer(experiment_directory, "latest.pth", optimizer, epoch)
-        ws.save_latent_vectors(experiment_directory, "latest.pth", encoder, epoch)
+        ws.save_optimizer(os.path.join(experiment_directory,'pretrained_embedding'), "latest.pth", optimizer, epoch)
+        ws.save_latent_vectors(os.path.join(experiment_directory,'pretrained_embedding'), "latest.pth", encoder, epoch)
 
     def save_checkpoints(epoch):
 
-        ws.save_optimizer(experiment_directory, str(epoch) + ".pth", optimizer, epoch)
-        ws.save_latent_vectors(experiment_directory, str(epoch) + ".pth", encoder, epoch)
+        ws.save_optimizer(os.path.join(experiment_directory,'pretrained_embedding'), str(epoch) + ".pth", optimizer, epoch)
+        ws.save_latent_vectors(os.path.join(experiment_directory,'pretrained_embedding'), str(epoch) + ".pth", encoder, epoch)
 
     with open(train_split_file, "r") as f:
         train_split = json.load(f)
@@ -82,7 +82,7 @@ def main_function(experiment_directory, data_source, continue_from, batch_split,
 
     optimizer = torch.optim.Adam(encoder.parameters(), lr=0.001, betas=(0.9, 0.999), eps=1e-08, weight_decay=0, amsgrad=False)
 
-    lr_schedules = torch.optim.lr_scheduler.StepLR(optimizer, step_size=30 ,gamma=0.5, last_epoch=-1)
+    lr_schedules = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5 ,gamma=0.5, last_epoch=-1)
 
 
     if not os.path.isdir(os.path.join(experiment_directory, 'pretrained_embedding')):
@@ -193,7 +193,7 @@ def main_function(experiment_directory, data_source, continue_from, batch_split,
 
             save_latest(epoch)
             ws.save_logs(
-                experiment_directory,
+                os.path.join(experiment_directory,'pretrained_embedding'),
                 loss_log,
                 lr_log,
                 timing_log,
