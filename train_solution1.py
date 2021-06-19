@@ -183,6 +183,7 @@ def main_function(experiment_directory, data_source, continue_from, batch_split,
             del batch_loss
 
         epoch_loss/=batch_num
+        epoch_loss/=batch_size
         logging.info("epoch_loss = {:.9f}".format(epoch_loss))
         tensorboard_saver.add_scalar('epoch_loss', epoch_loss, epoch)
         lr_schedules.step()
