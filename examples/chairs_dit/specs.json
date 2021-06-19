@@ -1,6 +1,6 @@
 {
   "Description" : "This experiment learns a shape representation for chairs using data from ShapeNet version 2.",
-  "DataSource" : "../ShapeNet/DeepSDF",
+  "DataSource" : "./data",
   "TrainSplit": "examples/splits/sv2_chairs_train.json",
   "TestSplit": "examples/splits/sv2_chairs_test.json",
   "NetworkArch" : "deep_implicit_template_decoder",
@@ -20,7 +20,7 @@
     },
   "CodeLength" : 256,
   "NumEpochs" : 2001,
-  "SnapshotFrequency" : 1000,
+  "SnapshotFrequency" : 10,
   "AdditionalSnapshots" : [ 100, 500 ],
   "LearningRateSchedule" : [
     {
