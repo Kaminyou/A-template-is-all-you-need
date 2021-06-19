@@ -116,9 +116,25 @@ def load_pre_trained_latent_vectors(experiment_directory, checkpoint):
 
         return lat_vecs.weight.data.detach()
 
+def load_encoder_parameters(experiment_directory, checkpoint, encoder):
+
+
+    filename = os.path.join(
+        experiment_directory, latent_codes_subdir, checkpoint + ".pth"
+    )
+
+    if not os.path.isfile(filename):
+        raise Exception('model state dict "{}" does not exist'.format(filename))
+
+    data = torch.load(filename)
+
+    encoder.load_state_dict(data["latent_codes"])
+
+    return data["epoch"]
 
 def load_latent_vectors(experiment_directory, filename, lat_vecs):
 
+    
     full_filename = os.path.join(
         get_latent_codes_dir(experiment_directory), filename
     )
