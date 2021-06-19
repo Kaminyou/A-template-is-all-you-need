@@ -6,7 +6,9 @@ import torch
 import torch.nn.functional as F
 import numpy as np
 import math
+from torch.cuda.amp import autocast
 
+import deep_sdf.workspace as ws
 
 class SdfDecoder(nn.Module):
     def __init__(
@@ -59,6 +61,7 @@ class SdfDecoder(nn.Module):
         self.th = nn.Tanh()
 
     # input: N x (L+3)
+    @autocast(enabled=ws.use_amp)
     def forward(self, input):
         xyz = input[:, -3:]
         x = input
@@ -145,6 +148,7 @@ class Warper(nn.Module):
         self.out_layer_coord_affine = nn.Linear(hidden_size, 6)
         self.out_layer_coord_affine.apply(init_out_weights)
 
+    @autocast(enabled=ws.use_amp)
     def forward(self, input, step=1.0):
         if step < 1.0:
             input_bk = input.clone().detach()
@@ -181,6 +185,7 @@ class Decoder(nn.Module):
         self.warper = Warper(latent_size, **warper_kargs)
         self.sdf_decoder = SdfDecoder(**decoder_kargs)
 
+    @autocast(enabled=ws.use_amp)
     def forward(self, input, output_warped_points=False, output_warping_param=False,
                 step=1.0):
         p_final, warping_param, warped_xyzs = self.warper(input, step=step)

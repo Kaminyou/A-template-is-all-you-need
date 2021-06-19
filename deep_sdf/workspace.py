@@ -6,9 +6,11 @@ import os
 import torch
 from tensorboardX import SummaryWriter
 
+use_amp = False
 model_params_subdir = "ModelParameters"
 optimizer_params_subdir = "OptimizerParameters"
 latent_codes_subdir = "LatentCodes"
+scaler_subdir = "Scaler"
 logs_filename = "Logs.pth"
 reconstructions_subdir = "Reconstructions"
 reconstruction_meshes_subdir = "Meshes"
@@ -54,6 +56,35 @@ def load_model_parameters(experiment_directory, checkpoint, decoder):
 
     return data["epoch"]
 
+def load_scaler(experiment_directory, checkpoint, scaler):
+
+    filename = os.path.join(
+        experiment_directory, scaler_subdir, checkpoint + ".pth"
+    )
+
+    if not os.path.isfile(filename):
+        raise Exception('scaler state dict "{}" does not exist'.format(filename))
+
+    data = torch.load(filename)
+
+    scaler.load_state_dict(data["scaler_state_dict"])
+
+    return data["epoch"]
+
+def load_encoder_parameters(experiment_directory, checkpoint, encoder):
+
+    filename = os.path.join(
+        experiment_directory, latent_codes_subdir, checkpoint + ".pth"
+    )
+
+    if not os.path.isfile(filename):
+        raise Exception('model state dict "{}" does not exist'.format(filename))
+
+    data = torch.load(filename)
+
+    encoder.load_state_dict(data["latent_codes"])
+
+    return data["epoch"]
 
 def build_decoder(experiment_directory, experiment_specs):
 
@@ -164,6 +195,14 @@ def load_latent_vectors(experiment_directory, filename, lat_vecs):
         lat_vecs.load_state_dict(data["latent_codes"])
 
     return data["epoch"]
+
+
+def save_scaler(experiment_directory, filename, scaler, epoch):
+    scaler_dir = get_scaler_dir(experiment_directory, True)
+    torch.save(
+        {"epoch": epoch, "scaler_state_dict": scaler.state_dict()},
+        os.path.join(scaler_dir, filename),
+    )
 
 
 def save_model(experiment_directory, filename, decoder, epoch):
@@ -309,6 +348,16 @@ def get_reconstructed_code_filename(
 def get_evaluation_dir(experiment_dir, checkpoint, create_if_nonexistent=False):
 
     dir = os.path.join(experiment_dir, evaluation_subdir, checkpoint)
+
+    if create_if_nonexistent and not os.path.isdir(dir):
+        os.makedirs(dir)
+
+    return dir
+
+
+def get_scaler_dir(experiment_dir, create_if_nonexistent=False):
+
+    dir = os.path.join(experiment_dir, scaler_subdir)
 
     if create_if_nonexistent and not os.path.isdir(dir):
         os.makedirs(dir)

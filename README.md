@@ -46,7 +46,7 @@ python batch.py --jsons_root $jsons_root --data_root $data_root --output_root $o
 Please refer to [link](https://blog.csdn.net/qq_38677322/article/details/110957634). In short, dependencies of `CLI11`, `Pangolin`, `nanoflann`, and `Eigen3` should be built first. However, the whole process is arduous and various bugs do exist!
 
 ### Covert 2D image from RGBA to RGB
-```python
+```script
 python rgba2rgb.py -d [data_source] -c 'chairs', --level 'easy'
 ```
 
@@ -115,6 +115,12 @@ gdown --id 1TzUSNe4kAB3plnUf_ZUsxTnVgNq0gqzJ #04379243 tables
                      .
                               
 ```
+## Extract pretrained embedding
+Please use `extract_embedding.py` in the environment of [Deep Implicit Template](https://github.com/ZhengZerong/DeepImplicitTemplates/tree/db65db3c22e0f5111236e48deab7cffb38bd60c3). This code will automatically extract the embedding from the pretrained `Embedding` weights and store in a dictionary, which can be accessed by the `instance_name`.
+```
+python generate_training_meshes.py -e ./pretrained/${obj}_dit
+```
+We also provided the pre-extracted one in `./pretrained_embedding/` folder.
 
 ## Encoders
 
@@ -123,15 +129,55 @@ the folder `contrastive/encoders`.
 For more details please refer to [ENCODER.md](contrastive/encoders/ENCODER.md).  
 
 ## Training
-
-```python
+```script
 python train_deep_implicit_templates.py -e examples/cars_dit --debug --batch_split 2 -d ./data
 ```
+**To expedite training, the mixed precision mode is provided:**<br>
+*Package [apex](https://pypi.org/project/apex/) is required! Please make sure that you have installed it first!*
+```script
+python train_deep_implicit_templates.py -e examples/cars_dit --debug --batch_split 2 -d ./data --mixed_precision --mixed_precision_level O1
+```
+Plese note that `mixed_precision_level` has three options, `O0`, `O1`, `O2`, `O3`, corresponding to different settings. 
+- `O0`: FP32 training
+- `O1`: Mixed Precision (recommended for typical use)
+- `O2`: “Almost FP16” Mixed Precision
+- `O3`: FP16 training
+
+For more information, please refer to the [official document](https://nvidia.github.io/apex/amp.html).<br>
+If you cannot successfully install `apex` from pypl. Please refer to [link](https://stackoverflow.com/questions/66610378/unencryptedcookiesessionfactoryconfig-error-when-importing-apex) to build from source, and add argument to indicate where your `apex` is.
+```script
+--apex_path path_to_apex
+```
+
+### Updates
+
+```script
+python train_deep_implicit_templates_v2.py \
+-e examples/cars_dit \
+--debug \
+--batch_split 2 \
+-d ./data \
+[--mixed_precision] \
+[--pretrained_weights exps/checkpoints/checkpont_latest.pt]
+```  
+`train_deep_implicit_templates_v2.py` contains a few updates compared to the original one, including:  
+1. start training with weights obtained from contrastive learning.  
+    - please use `--pretrained_weights` to specify the path to the checkpoint obtained from `train_contrastive.py`.
+    - here a slightly different encoder `_Encoder` (check it out in [`networks/encoder.py`](networks/encoder.py)) 
+      is used for easy weight transfer.
+2. use [torch.cuda.amp](https://pytorch.org/docs/stable/amp.html) for mixed precision training.
+    - please add `--mixed_precision` to enable such feature.
+3. train with a dataset that includes both hard and easy 2d images.
+    - if you want to train with certain level of difficulty instead, please modify `*` to `easy/hard` in 
+      [this line](train_deep_implicit_templates_v2.py#L199).  
+      
+We can eventually replace `train_deep_implicit_templates.py` with `train_deep_implicit_templates_v2.py` if everyone has 
+no problem running this version of training code.  
 
 ## Contrastive learning
 
 Run the following to perform contrastive learning: 
-```python
+```script
 python train_contrastive.py -e experiments/planes
 ```
 
@@ -143,10 +189,21 @@ To use the pretrained weights for the later deep implicit templates training, pl
 
 ## Generate meshes
 
-```python
+```script
 GPU_ID=0
 CUDA_VISIBLE_DEVICES=${GPU_ID} python generate_template_mesh.py -e pretrained/sofas_dit --debug 
 CUDA_VISIBLE_DEVICES=${GPU_ID} python generate_training_meshes.py -e pretrained/sofas_dit --debug --start_id 0 --end_id 20 --octree --keep_normalization
+```
+
+## Analyze
+1. To analyze the pretrained embedding
+```
+python analyze.py -e examples/sofas_dit -p --thread 16
+```
+2. To analyze the embedding yield from own encoder
+- *`early_stop` is to prevent the time-consuming inference process and only extract some data for analysis*
+```
+python analyze.py -e examples/sofas_dit -d $data_path -c latest --early_stop 20 --thread 16
 ```
 
 ## Acknowledgements

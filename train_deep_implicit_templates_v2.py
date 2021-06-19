@@ -14,15 +14,16 @@ import json
 import time
 import datetime
 import random
-from networks.encoder import Encoder
 import psutil
 import tqdm
-import argparse
+
+
 
 import deep_sdf
 import deep_sdf.workspace as ws
 from deep_sdf.lr_schedule import get_learning_rate_schedules
 import deep_sdf.loss as loss
+from utils import load_weights_from_contrastive_learning
 
 def check_cpu():
     print("---------------------------------------------------")
@@ -35,8 +36,10 @@ def get_spec_with_default(specs, key, default):
     except KeyError:
         return default
 
+
 def get_mean_latent_vector_magnitude(latent_vectors):
     return torch.mean(torch.norm(latent_vectors.detach(), dim=1))
+
 
 def append_parameter_magnitudes(param_mag_log, model):
     for name, param in model.named_parameters():
@@ -45,6 +48,7 @@ def append_parameter_magnitudes(param_mag_log, model):
         if name not in param_mag_log.keys():
             param_mag_log[name] = []
         param_mag_log[name].append(param.data.norm().item())
+
 
 def apply_curriculum_l1_loss(pred_sdf_list, sdf_gt, loss_l1_soft, num_sdf_samples):
     soft_l1_eps_list = [2.5e-2, 1e-2, 2.5e-3, 0]
@@ -59,6 +63,7 @@ def apply_curriculum_l1_loss(pred_sdf_list, sdf_gt, loss_l1_soft, num_sdf_sample
     sdf_loss = sum(sdf_loss) / len(sdf_loss)
     return sdf_loss
 
+
 def apply_pointwise_reg(warped_xyz_list, xyz_, huber_fn, num_sdf_samples):
     pw_loss = []
     for k in range(len(warped_xyz_list)):
@@ -67,6 +72,7 @@ def apply_pointwise_reg(warped_xyz_list, xyz_, huber_fn, num_sdf_samples):
         # pw_loss.append(torch.sum((warped_xyz_list[k] - xyz_) ** 2) / num_sdf_samples)
     pw_loss = sum(pw_loss) / len(pw_loss)
     return pw_loss
+
 
 def apply_pointpair_reg(warped_xyz_list, xyz_, loss_lp, scene_per_split, num_sdf_samples):
     delta_xyz = warped_xyz_list[-1] - xyz_
@@ -129,15 +135,17 @@ def main_function(experiment_directory, data_source, continue_from, batch_split)
         logging.debug("clipping gradients to max norm {}".format(grad_clip))
 
     def save_latest(epoch):
+
         ws.save_model(experiment_directory, "latest.pth", decoder, epoch)
-        ws.save_optimizer(experiment_directory, "latest_encoder.pth", optimizer_encoder, epoch)
-        ws.save_optimizer(experiment_directory, "latest_decoder.pth", optimizer_decoder, epoch)
+        ws.save_optimizer(experiment_directory, "latest.pth", optimizer_all, epoch)
+        ws.save_scaler(experiment_directory, "latest.pth", scaler, epoch)
         ws.save_latent_vectors(experiment_directory, "latest.pth", encoder, epoch)
 
     def save_checkpoints(epoch):
+
         ws.save_model(experiment_directory, str(epoch) + ".pth", decoder, epoch)
-        ws.save_optimizer(experiment_directory, str(epoch) + "_encoder.pth", optimizer_encoder, epoch)
-        ws.save_optimizer(experiment_directory, str(epoch) + "_decoder.pth", optimizer_decoder, epoch)
+        ws.save_optimizer(experiment_directory, str(epoch) + ".pth", optimizer_all, epoch)
+        ws.save_scaler(experiment_directory, str(epoch) + ".pth", scaler, epoch)
         ws.save_latent_vectors(experiment_directory, str(epoch) + ".pth", encoder, epoch)
 
     def signal_handler(sig, frame):
@@ -145,6 +153,7 @@ def main_function(experiment_directory, data_source, continue_from, batch_split)
         sys.exit(0)
 
     def adjust_learning_rate(lr_schedules, optimizer, epoch):
+
         for i, param_group in enumerate(optimizer.param_groups):
             param_group["lr"] = lr_schedules[i].get_learning_rate(epoch)
 
@@ -177,6 +186,9 @@ def main_function(experiment_directory, data_source, continue_from, batch_split)
 
     logging.info("training with {} GPU(s)".format(torch.cuda.device_count()))
 
+    # if torch.cuda.device_count() > 1:0
+    decoder = torch.nn.DataParallel(decoder)
+
     num_epochs = specs["NumEpochs"]
     log_frequency = get_spec_with_default(specs, "LogFrequency", 10)
 
@@ -184,7 +196,7 @@ def main_function(experiment_directory, data_source, continue_from, batch_split)
         train_split = json.load(f)
 
     sdf_dataset = deep_sdf.data.SDFSamples(
-        data_source, train_split, num_samp_per_scene, load_ram=False, level = 'easy'
+        data_source, train_split, num_samp_per_scene, load_ram=False, level='*'
     )
 
     if sdf_dataset.load_ram:
@@ -206,49 +218,47 @@ def main_function(experiment_directory, data_source, continue_from, batch_split)
     num_scenes = len(sdf_dataset)
 
     logging.info("There are {} scenes".format(num_scenes))
-
-    logging.info(decoder)
-
-    try:
-        if args.apex_path:
-            sys.path.append(args.apex_path)
-        from apex import amp
-        apex_support = True
-    except:
-        logging.info("apex is not supported")
-        apex_support = False 
     
     #===========================================================================
     #                   Use Encoder to replace embedding                       #
     #===========================================================================
-    encoder = Encoder(latent_size=latent_size).cuda()
+    from networks.encoder import _Encoder
+    encoder = _Encoder(latent_size=latent_size).cuda()
+    if args.pretrained_weights is not None:
+        checkpoint = torch.load(args.pretrained_weights)
+        load_weights_from_contrastive_learning(
+            encoder, 
+            checkpoint['model_state_dict'], 
+            args.framework
+        )
+    encoder = torch.nn.DataParallel(encoder)
+
+    logging.info(encoder)
+    logging.info(decoder)
 
     loss_l1 = torch.nn.L1Loss(reduction="sum")
     loss_l1_soft = loss.SoftL1Loss(reduction="sum")
     loss_lp = torch.nn.DataParallel(loss.LipschitzLoss(k=0.5, reduction="sum"))
     huber_fn = loss.HuberFunc(reduction="sum")
 
-    optimizer_encoder = torch.optim.Adam(
+    optimizer_all = torch.optim.Adam(
         [
+            {
+                "params": decoder.module.warper.parameters(),
+                "lr": lr_schedules[0].get_learning_rate(0),
+            },
+            {
+                "params": decoder.module.sdf_decoder.parameters(),
+                "lr": lr_schedules[1].get_learning_rate(0),
+            },
             {
                 "params": encoder.parameters(),
                 "lr": lr_schedules[2].get_learning_rate(0),
             },
         ]
     )
-
-    optimizer_decoder = torch.optim.Adam(
-        [
-            {
-                "params": decoder.warper.parameters(),
-                "lr": lr_schedules[0].get_learning_rate(0),
-            },
-            {
-                "params": decoder.sdf_decoder.parameters(),
-                "lr": lr_schedules[1].get_learning_rate(0),
-            },
-        ]
-    )
+    
+    scaler = torch.cuda.amp.GradScaler(enabled=ws.use_amp)
 
     tensorboard_saver = ws.create_tensorboard_saver(experiment_directory)
 
@@ -268,20 +278,20 @@ def main_function(experiment_directory, data_source, continue_from, batch_split)
         else:
             logging.info('continuing from "{}"'.format(continue_from))
 
-            lat_epoch = ws.load_model_parameters(
-                experiment_directory, continue_from + ".pth", encoder
+            lat_epoch = ws.load_encoder_parameters(
+                experiment_directory, continue_from, encoder
             )
 
             model_epoch = ws.load_model_parameters(
                 experiment_directory, continue_from, decoder
             )
 
-            optimizer_encoder_epoch = ws.load_optimizer(
-                experiment_directory, continue_from + "_encoder.pth", optimizer_encoder
+            optimizer_epoch = ws.load_optimizer(
+                experiment_directory, continue_from + ".pth", optimizer_all
             )
 
-            optimizer_decoder_epoch = ws.load_optimizer(
-                experiment_directory, continue_from + "_decoder.pth", optimizer_decoder
+            scaler_epoch = ws.load_scaler(
+                experiment_directory, continue_from, scaler
             )
 
             loss_log, lr_log, timing_log, lat_mag_log, param_mag_log, log_epoch = ws.load_logs(
@@ -293,10 +303,10 @@ def main_function(experiment_directory, data_source, continue_from, batch_split)
                     loss_log, lr_log, timing_log, lat_mag_log, param_mag_log, model_epoch
                 )
 
-            if not (model_epoch == optimizer_encoder_epoch and mode_epoch == optimizer_decoder_epoch and model_epoch == lat_epoch):
+            if not (model_epoch == optimizer_epoch and model_epoch == lat_epoch):
                 raise RuntimeError(
-                    "epoch mismatch: {} vs {} vs {} vs {} vs {}".format(
-                        model_epoch, optimizer_encoder_epoch, optimizer_decoder_epoch, lat_epoch, log_epoch
+                    "epoch mismatch: {} vs {} vs {} vs {}".format(
+                        model_epoch, optimizer_epoch, lat_epoch, log_epoch
                     )
                 )
 
@@ -317,20 +327,7 @@ def main_function(experiment_directory, data_source, continue_from, batch_split)
             sum(p.data.nelement() for p in encoder.parameters())
         )
     )
-
-    use_fp16 = apex_support and args.mixed_precision
-    if use_fp16:
-        logging.info("Use fp16_precision")
-        if args.mixed_precision_level == "O1":
-            keep_batchnorm_fp32 = None
-        else:
-            keep_batchnorm_fp32 = True
-        encoder, optimizer_encoder = amp.initialize(encoder, optimizer_encoder, opt_level= args.mixed_precision_level, keep_batchnorm_fp32=keep_batchnorm_fp32, verbosity=0)
-        decoder, optimizer_decoder = amp.initialize(decoder, optimizer_decoder, opt_level= args.mixed_precision_level, keep_batchnorm_fp32=keep_batchnorm_fp32, verbosity=0)
-
-    # if torch.cuda.device_count() > 1:0
-    decoder = torch.nn.DataParallel(decoder)
-
+    
     use_curriculum = get_spec_with_default(specs, "UseCurriculum", False)
 
     use_pointwise_loss = get_spec_with_default(specs, "UsePointwiseLoss", False)
@@ -351,8 +348,7 @@ def main_function(experiment_directory, data_source, continue_from, batch_split)
         decoder.train()
         encoder.train()
 
-        adjust_learning_rate([lr_schedules[2]], optimizer_encoder, epoch)
-        adjust_learning_rate(lr_schedules[:2], optimizer_decoder, epoch)
+        adjust_learning_rate(lr_schedules, optimizer_all, epoch)
 
         batch_num = len(sdf_loader)
         loader = tqdm.tqdm(sdf_loader,desc="training epoch {}".format(epoch), position=0, leave=True)
@@ -393,59 +389,58 @@ def main_function(experiment_directory, data_source, continue_from, batch_split)
             batch_loss_pp = 0.0
             batch_loss = 0.0
 
-            #optimizer_all.zero_grad()
-            optimizer_encoder.zero_grad()
-            optimizer_decoder.zero_grad()
+            optimizer_all.zero_grad()
 
             for i in range(batch_split):
 
                 input_imgs = images[i].cuda()
-                batch_vecs = encoder(input_imgs)
+                with torch.cuda.amp.autocast(enabled=ws.use_amp):
+                    batch_vecs = encoder(input_imgs)
 
-                xyz_ = xyz[i].cuda()
-                batch_vecs = batch_vecs.unsqueeze(1).repeat(1, num_samp_per_scene, 1).view(-1, latent_size)
-                input = torch.cat([batch_vecs, xyz_], dim=1)
+                    xyz_ = xyz[i].cuda()
+                    batch_vecs = batch_vecs.unsqueeze(1).repeat(1, num_samp_per_scene, 1).view(-1, latent_size)
+                    input = torch.cat([batch_vecs, xyz_], dim=1)
 
-                # NN optimization
-                warped_xyz_list, pred_sdf_list, _ = decoder(
-                    input, output_warped_points=True, output_warping_param=True)
+                    # NN optimization
+                    warped_xyz_list, pred_sdf_list, _ = decoder(
+                        input, output_warped_points=True, output_warping_param=True)
 
-                if enforce_minmax:
-                    # pred_sdf = pred_sdf * clamp_dist * 1.0
-                    for k in range(len(pred_sdf_list)):
-                        pred_sdf_list[k] = torch.clamp(pred_sdf_list[k], minT, maxT)
+                    if enforce_minmax:
+                        # pred_sdf = pred_sdf * clamp_dist * 1.0
+                        for k in range(len(pred_sdf_list)):
+                            pred_sdf_list[k] = torch.clamp(pred_sdf_list[k], minT, maxT)
 
-                if use_curriculum:
-                    sdf_loss = apply_curriculum_l1_loss(
-                        pred_sdf_list, sdf_gt[i].cuda(), loss_l1_soft, num_sdf_samples)
-                else:
-                    sdf_loss = loss_l1(pred_sdf_list[-1], sdf_gt[i].cuda()) / num_sdf_samples
-                batch_loss_sdf += sdf_loss.item()
-                chunk_loss = sdf_loss
-
-                if do_code_regularization:
-                    l2_size_loss = torch.sum(torch.norm(batch_vecs, dim=1))
-                    reg_loss = l2_size_loss / num_sdf_samples
-                    chunk_loss += code_reg_lambda * min(1.0, epoch / 100) * reg_loss.cuda()
-                    batch_loss_reg += reg_loss.item()
-
-                if use_pointwise_loss:
                     if use_curriculum:
-                        pw_loss = apply_pointwise_reg(warped_xyz_list, xyz_, huber_fn, num_sdf_samples)
+                        sdf_loss = apply_curriculum_l1_loss(
+                            pred_sdf_list, sdf_gt[i].cuda(), loss_l1_soft, num_sdf_samples)
                     else:
-                        pw_loss = apply_pointwise_reg(warped_xyz_list[-1:], xyz_, huber_fn, num_sdf_samples)
-                    batch_loss_pw += pw_loss.item()
-                    chunk_loss = chunk_loss + pw_loss.cuda() * pointwise_loss_weight * max(1.0, 10.0 * (1 - epoch / 100))
+                        sdf_loss = loss_l1(pred_sdf_list[-1], sdf_gt[i].cuda()) / num_sdf_samples
+                    batch_loss_sdf += sdf_loss.item()
+                    chunk_loss = sdf_loss
 
-                if use_pointpair_loss:
-                    if use_curriculum:
-                        lp_loss = apply_pointpair_reg(warped_xyz_list, xyz_, loss_lp, scene_per_split, num_sdf_samples)
-                    else:
-                        lp_loss = apply_pointpair_reg(warped_xyz_list[-1:], xyz_, loss_lp, scene_per_split, num_sdf_samples)
-                    batch_loss_pp += lp_loss.item()
-                    chunk_loss += lp_loss.cuda() * pointpair_loss_weight * min(1.0, epoch / 100)
+                    if do_code_regularization:
+                        l2_size_loss = torch.sum(torch.norm(batch_vecs, dim=1))
+                        reg_loss = l2_size_loss / num_sdf_samples
+                        chunk_loss += code_reg_lambda * min(1.0, epoch / 100) * reg_loss.cuda()
+                        batch_loss_reg += reg_loss.item()
 
-                chunk_loss.backward()
+                    if use_pointwise_loss:
+                        if use_curriculum:
+                            pw_loss = apply_pointwise_reg(warped_xyz_list, xyz_, huber_fn, num_sdf_samples)
+                        else:
+                            pw_loss = apply_pointwise_reg(warped_xyz_list[-1:], xyz_, huber_fn, num_sdf_samples)
+                        batch_loss_pw += pw_loss.item()
+                        chunk_loss = chunk_loss + pw_loss.cuda() * pointwise_loss_weight * max(1.0, 10.0 * (1 - epoch / 100))
+
+                    if use_pointpair_loss:
+                        if use_curriculum:
+                            lp_loss = apply_pointpair_reg(warped_xyz_list, xyz_, loss_lp, scene_per_split, num_sdf_samples)
+                        else:
+                            lp_loss = apply_pointpair_reg(warped_xyz_list[-1:], xyz_, loss_lp, scene_per_split, num_sdf_samples)
+                        batch_loss_pp += lp_loss.item()
+                        chunk_loss += lp_loss.cuda() * pointpair_loss_weight * min(1.0, epoch / 100)
+
+                scaler.scale(chunk_loss).backward()
                 batch_loss += chunk_loss.item()
 
             logging.debug("sdf_loss = {:.9f}, reg_loss = {:.9f}, pw_loss = {:.9f}, pp_loss = {:.9f}".format(
@@ -459,11 +454,11 @@ def main_function(experiment_directory, data_source, continue_from, batch_split)
             loss_log.append(batch_loss)
 
             if grad_clip is not None:
-
+                scaler.unscale_(optimizer_all)
                 torch.nn.utils.clip_grad_norm_(decoder.parameters(), grad_clip)
 
-            optimizer_encoder.step()
-            optimizer_decoder.step()
+            scaler.step(optimizer_all)
+            scaler.update()
 
             # release memory
             del warped_xyz_list, pred_sdf_list, sdf_loss, pw_loss, \
@@ -496,10 +491,13 @@ def main_function(experiment_directory, data_source, continue_from, batch_split)
                 epoch,
             )
 
+
 if __name__ == "__main__":
     random.seed(31359)
     torch.random.manual_seed(31359)
     np.random.seed(31359)
+
+    import argparse
 
     arg_parser = argparse.ArgumentParser(description="Train a DeepSDF autodecoder")
     arg_parser.add_argument(
@@ -535,31 +533,32 @@ if __name__ == "__main__":
         + "subbatches. This allows for training with large effective batch "
         + "sizes in memory constrained environments.",
     )
-
+    arg_parser.add_argument(
+        "--pretrained_weights",
+        dest="pretrained_weights",
+        default=None,
+        help="The path to the checkpoint of the model trained by contrastive learning."
+    )
+    arg_parser.add_argument(
+        "--contrastive_framework",
+        dest="framework",
+        default="simclr",
+        help="The framework of the contrastive learning."
+    )
     arg_parser.add_argument(
         "--mixed_precision",
         dest="mixed_precision",
         action="store_true",
-        help="train with mixed precision to expedite the process"
+        help="Whether to train with mixed precision."
     )
 
-    arg_parser.add_argument(
-        "--mixed_precision_level",
-        dest="mixed_precision_level",
-        default="O1",
-        help="O0->fp32; O1->mix fp16 &fp32; O2->fp16; O3->force fp16"
-    )
-    arg_parser.add_argument(
-        "--apex_path",
-        dest="apex_path",
-        default=None,
-        help="path to import apex"
-    )
 
     deep_sdf.add_common_args(arg_parser)
 
     args = arg_parser.parse_args()
-    
+
     deep_sdf.configure_logging(args)
-    
+
+    ws.use_amp = args.mixed_precision
+
     main_function(args.experiment_directory, args.data_source, args.continue_from, int(args.batch_split))

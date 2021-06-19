@@ -71,7 +71,7 @@ def main(args):
     if args.continue_from is not None:
         load_path = os.path.join(
             checkpoint_dir, 
-            f'checkpont_{args.continue_from}.pt'
+            f'checkpoint_{args.continue_from}.pt'
         )
         checkpoint = torch.load(load_path)
         start_epoch = checkpoint['epoch']

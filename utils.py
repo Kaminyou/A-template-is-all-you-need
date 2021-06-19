@@ -67,4 +67,4 @@ def load_weights_from_contrastive_learning(encoder, state_dict, contrastive_fram
         del state_dict[k]
         
     msg = encoder.load_state_dict(state_dict, strict=False)
-    assert set(msg.missing_keys) == {"fc.weight", "fc.bias"}
+    #assert set(msg.missing_keys) == {"fc.weight", "fc.bias"}

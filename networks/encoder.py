@@ -4,6 +4,9 @@ import math
 import torch.nn.functional as F
 import torch.nn as nn
 from torchvision import models
+from torch.cuda.amp import autocast
+
+import deep_sdf.workspace as ws
 
 class Encoder(nn.Module):
     def __init__(self, latent_size):
@@ -23,13 +26,24 @@ class Encoder(nn.Module):
         return latent_vec
 
 class _Encoder(nn.Module):
-    def __init__(self, name='resnet18', latent_size=256, pretrained=True):
+    def __init__(
+        self, 
+        name='resnet18', 
+        latent_size=256, 
+        pretrained=True,
+        fix_weight=True,
+    ):
         super(_Encoder, self).__init__()
         
         builder = getattr(models, name)
         resnet = builder(pretrained=pretrained)
         self.encoder = nn.Sequential(*list(resnet.children())[:-1])
-        self.fc = nn.Linear(resnet.fc.in_features, latent_size)
+        dim = resnet.fc.in_features
+        self.fc = nn.Sequential(
+            nn.Linear(dim, dim),
+            nn.ReLU(),
+            nn.Linear(dim, latent_size),
+        )
 
         if not pretrained:
             for m in self.modules():
@@ -39,7 +53,12 @@ class _Encoder(nn.Module):
                 elif isinstance(m, nn.BatchNorm2d):
                     m.weight.data.fill_(1)
                     m.bias.data.zero_()
-                    
+
+        if fix_weight:
+            for param in self.encoder.parameters():
+                param.requires_grad = False
+
+    @autocast(enabled=ws.use_amp)                
     def forward(self, x):
         x = self.encoder(x)
         feat = x.view(x.size(0), -1)
