@@ -8,6 +8,7 @@ import os
 import json
 from reconstruction.embedding_dataset import EmbeddingSet
 import torch.utils.data as data_utils
+import torch.nn as nn
 from networks.encoder import Encoder
 import time
 import tqdm
@@ -77,11 +78,13 @@ def main_function(experiment_directory, data_source, continue_from, batch_split,
     )
     logging.debug("torch num_threads: {}".format(torch.get_num_threads()))
 
-    encoder = Encoder(latent_size=latent_size).cuda()
+    encoder = Encoder(latent_size=latent_size)
+    
     loss_l1 = torch.nn.L1Loss(reduction="sum")
 
     optimizer = torch.optim.Adam(encoder.parameters(), lr=0.001, betas=(0.9, 0.999), eps=1e-08, weight_decay=0, amsgrad=False)
-
+    encoder = encoder.cuda()
+    encoder = torch.nn.DataParallel(encoder)
     lr_schedules = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5 ,gamma=0.5, last_epoch=-1)
 
 
