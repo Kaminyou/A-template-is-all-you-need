@@ -149,6 +149,11 @@ If you cannot successfully install `apex` from pypl. Please refer to [link](http
 --apex_path path_to_apex
 ```
 
+### Pre-train encoder
+```script
+python train_solution1.py -e pretrained/chairs_dit/ -d ./data/
+```
+
 ### Updates
 
 ```script
