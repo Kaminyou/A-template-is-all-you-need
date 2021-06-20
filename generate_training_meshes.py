@@ -13,7 +13,7 @@ import torchvision.transforms as transforms
 import sys
 import deep_sdf
 import deep_sdf.workspace as ws
-from networks.encoder import _Encoder
+from networks.encoder import Encoder
 
 import shutil
 
@@ -63,7 +63,7 @@ def read_image(img_path):
     return img
 
 def code_to_mesh(experiment_directory, checkpoint, start_id, end_id, view_id, 
-                 keep_normalized=False, use_octree=True, resolution=256):
+                 keep_normalized=False, use_octree=True, resolution=256, mode):
 
     specs_filename = os.path.join(experiment_directory, "specs.json")
 
@@ -96,8 +96,8 @@ def code_to_mesh(experiment_directory, checkpoint, start_id, end_id, view_id,
     #===========================================================================
     #                   Use Encoder to replace embedding                       #
     #===========================================================================
-    encoder = _Encoder(latent_size=latent_size)
-    encoder = torch.nn.DataParallel(encoder)
+    encoder = Encoder(latent_size=latent_size)
+    #encoder = torch.nn.DataParallel(encoder)
 
     saved_model_state = torch.load(
         os.path.join(experiment_directory, ws.latent_codes_subdir, checkpoint + ".pth")
@@ -115,7 +115,10 @@ def code_to_mesh(experiment_directory, checkpoint, start_id, end_id, view_id,
     elif specs["NetworkArch"] == "deep_implicit_template_decoder":
         clamping_function = lambda x : torch.clamp(x, -specs["ClampingDistance"], specs["ClampingDistance"])
 
-    train_split_file = specs["TrainSplit"]
+    if mode == "train":
+        train_split_file = specs["TrainSplit"]
+    if mode == "test"
+        train_split_file = specs["TestSplit"]
 
     with open(train_split_file, "r") as f:
         train_split = json.load(f)
@@ -233,7 +236,7 @@ if __name__ == "__main__":
         "--end_id",
         dest="end_id",
         type=int,
-        default=20,
+        default=5,
         help="end_id.",
     )
     arg_parser.add_argument(
@@ -247,8 +250,15 @@ if __name__ == "__main__":
         "--view_id",
         dest="view_id",
         type=int,
-        default=0,
+        default=30,
         help="Which view of all the rgb images to encode.",
+    )
+    arg_parser.add_argument(
+        "--mode",
+        dest="mode",
+        type=str,
+        default="train",
+        help="Generate instance from training or testing data. Option=[train, test]",
     )
 
     use_octree_group = arg_parser.add_mutually_exclusive_group()
@@ -281,4 +291,5 @@ if __name__ == "__main__":
         args.view_id,
         args.keep_normalized,
         args.use_octree,
-        args.resolution)
+        args.resolution
+        args.mode)
