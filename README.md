@@ -115,6 +115,16 @@ gdown --id 1vI0qsAtJ2kwSx8KpyH9sJu_2fCGh1DOu #04256520 sofas
             <class_name>/
                 <instance_name>/
                       <instance_name>.npz
+    SurfaceSamples/
+        <dataset_name>/
+            <class_name>/
+                <instance_name>/
+                      <instance_name>.ply
+    NormalizationParameters/
+        <dataset_name>/
+            <class_name>/
+                <instance_name>/
+                      <instance_name>.npz
     <class_name>/         
         <instance_name>/
             <easy/hard>
