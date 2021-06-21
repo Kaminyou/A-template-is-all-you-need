@@ -92,6 +92,12 @@ gdown --id 1ObsXX4TJjADnlyuFPVJxz00w-fZFK2ak #03636649 lamps
 gdown --id 18k8LqWlc2AYr5-gn2u_KQsodGg9macqx #04256520 sofas
 gdown --id 1TzUSNe4kAB3plnUf_ZUsxTnVgNq0gqzJ #04379243 tables
 ```
+#### PLY ground truth (TESTING SET ONLY)
+```script
+gdown --id 1W1oP4zHWP0gPXFAGWGm9rIhCrUlXfhtA #02691156 planes
+gdown --id 17UsiUaeSF2O9BbOoCONg-BEfW6_3GTZm #03001627 chairs
+gdown --id 1FKSDTitAmIQNODEj5mSQUMFyoPJOpnY0 #04256520 sofas
+```
 
 ## Data Layouts
 ```script
