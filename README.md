@@ -99,6 +99,13 @@ gdown --id 17UsiUaeSF2O9BbOoCONg-BEfW6_3GTZm #03001627 chairs
 gdown --id 1FKSDTitAmIQNODEj5mSQUMFyoPJOpnY0 #04256520 sofas
 ```
 
+#### NormalizationParameters ground truth (TESTING SET ONLY)
+```script
+gdown --id 156WckbItDBjmDL89J7yrNxuL2MOQSmam #02691156 planes
+gdown --id 1F7xs-3v0yA0IcIhEn5AaeKdaAEaZYlOA #03001627 chairs
+gdown --id 1vI0qsAtJ2kwSx8KpyH9sJu_2fCGh1DOu #04256520 sofas
+```
+
 ## Data Layouts
 ```script
 <data_source_name>/
