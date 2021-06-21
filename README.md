@@ -223,6 +223,15 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python generate_template_mesh.py -e pretrained/so
 CUDA_VISIBLE_DEVICES=${GPU_ID} python generate_training_meshes.py -e pretrained/sofas_dit --debug --start_id 0 --end_id 20 --octree --keep_normalization
 ```
 
+## Evaluate
+```script
+python evaluate.py -c $class_name -d $data_src -i $mesh_output_folder
+```
+e.g.
+```script
+python evaluate.py -c sofas -d ./data/ -i examples/sofas_dit/TrainingMeshes/2000/ShapeNetV2/04256520/
+```
+
 ## Analyze
 1. To analyze the pretrained embedding
 ```
