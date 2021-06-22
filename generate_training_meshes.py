@@ -63,7 +63,7 @@ def read_image(img_path):
     return img
 
 def code_to_mesh(experiment_directory, checkpoint, start_id, end_id, view_id, 
-                 keep_normalized=False, use_octree=True, resolution=256, mode):
+                 keep_normalized=False, use_octree=True, resolution=256, mode='train'):
 
     specs_filename = os.path.join(experiment_directory, "specs.json")
 
@@ -117,7 +117,7 @@ def code_to_mesh(experiment_directory, checkpoint, start_id, end_id, view_id,
 
     if mode == "train":
         train_split_file = specs["TrainSplit"]
-    if mode == "test"
+    if mode == "test":
         train_split_file = specs["TestSplit"]
 
     with open(train_split_file, "r") as f:
@@ -144,6 +144,7 @@ def code_to_mesh(experiment_directory, checkpoint, start_id, end_id, view_id,
             str(saved_model_epoch),
             dataset_name,
             class_name,
+            mode
         )
 
         if not os.path.isdir(mesh_dir):
@@ -291,5 +292,5 @@ if __name__ == "__main__":
         args.view_id,
         args.keep_normalized,
         args.use_octree,
-        args.resolution
+        args.resolution,
         args.mode)
