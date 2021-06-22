@@ -268,8 +268,8 @@ def main_function(experiment_directory, data_source, continue_from, batch_split)
         else:
             logging.info('continuing from "{}"'.format(continue_from))
 
-            lat_epoch = ws.load_model_parameters(
-                experiment_directory, continue_from + ".pth", encoder
+            lat_epoch = ws.load_encoder_parameters(
+                experiment_directory, continue_from, encoder
             )
 
             model_epoch = ws.load_model_parameters(
@@ -293,7 +293,7 @@ def main_function(experiment_directory, data_source, continue_from, batch_split)
                     loss_log, lr_log, timing_log, lat_mag_log, param_mag_log, model_epoch
                 )
 
-            if not (model_epoch == optimizer_encoder_epoch and mode_epoch == optimizer_decoder_epoch and model_epoch == lat_epoch):
+            if not (model_epoch == optimizer_encoder_epoch and model_epoch == optimizer_decoder_epoch and model_epoch == lat_epoch):
                 raise RuntimeError(
                     "epoch mismatch: {} vs {} vs {} vs {} vs {}".format(
                         model_epoch, optimizer_encoder_epoch, optimizer_decoder_epoch, lat_epoch, log_epoch

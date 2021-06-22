@@ -51,6 +51,7 @@ def load_model_parameters(experiment_directory, checkpoint, decoder):
         raise Exception('model state dict "{}" does not exist'.format(filename))
 
     data = torch.load(filename)
+    decoder = torch.nn.DataParallel(decoder)
 
     decoder.load_state_dict(data["model_state_dict"])
 
