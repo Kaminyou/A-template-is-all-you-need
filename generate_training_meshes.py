@@ -14,7 +14,7 @@ import sys
 import deep_sdf
 import deep_sdf.workspace as ws
 from networks.encoder import Encoder
-
+import random
 import shutil
 
 # slightly different organization of files than the one in deep_sdf.data
@@ -63,7 +63,7 @@ def read_image(img_path):
     return img
 
 def code_to_mesh(experiment_directory, checkpoint, start_id, end_id, view_id, 
-                 keep_normalized=False, use_octree=True, resolution=256, mode='train'):
+                 keep_normalized=False, use_octree=True, resolution=256, mode="train"):
 
     specs_filename = os.path.join(experiment_directory, "specs.json")
 
@@ -130,70 +130,78 @@ def code_to_mesh(experiment_directory, checkpoint, start_id, end_id, view_id,
     for i in range(len(instance_filenames)):
         if i < start_id:
             continue
+        try:
+            print(os.path.normpath(instance_filenames[i]))
+            if sys.platform.startswith('linux'):
+                dataset_name, class_name, instance_name = os.path.normpath(instance_filenames[i]).split("/")
+            else:
+                dataset_name, class_name, instance_name = os.path.normpath(instance_filenames[i]).split("\\")
+            instance_name = instance_name.split(".")[0]
 
-        print(os.path.normpath(instance_filenames[i]))
-        if sys.platform.startswith('linux'):
-            dataset_name, class_name, instance_name = os.path.normpath(instance_filenames[i]).split("/")
-        else:
-            dataset_name, class_name, instance_name = os.path.normpath(instance_filenames[i]).split("\\")
-        instance_name = instance_name.split(".")[0]
-
-        mesh_dir = os.path.join(
-            experiment_directory,
-            ws.training_meshes_subdir,
-            str(saved_model_epoch),
-            dataset_name,
-            class_name,
-            mode
-        )
-
-        if not os.path.isdir(mesh_dir):
-            os.makedirs(mesh_dir)
-
-        mesh_filename = os.path.join(mesh_dir, instance_name)
-
-        offset = None
-        scale = None
-
-        if not keep_normalized:
-
-            normalization_params = np.load(
-                ws.get_normalization_params_filename(
-                    data_source, dataset_name, class_name, instance_name
-                )
+            mesh_dir = os.path.join(
+                experiment_directory,
+                ws.training_meshes_subdir,
+                str(saved_model_epoch),
+                dataset_name,
+                class_name,
             )
-            offset = normalization_params["offset"]
-            scale = normalization_params["scale"]
 
-        # pick a view to encode, also copy the image to the current directory
-        shutil.copy2(instance_images[i][view_id], mesh_filename+'.png')
-        instance_image = read_image(instance_images[i][view_id]).unsqueeze(0).cuda()
-        with torch.no_grad():
-            latent_vector = encoder(instance_image)
-        if use_octree:
-            with torch.no_grad():
-                deep_sdf.mesh.create_mesh_octree(
-                    decoder,
-                    latent_vector,
-                    mesh_filename,
-                    N=resolution,
-                    max_batch=int(2 ** 17),
-                    offset=offset,
-                    scale=scale,
-                    clamp_func=clamping_function
-                )
-        else:
-            with torch.no_grad():
-                deep_sdf.mesh.create_mesh(
-                    decoder,
-                    latent_vector,
-                    mesh_filename,
-                    N=resolution,
-                    max_batch=int(2 ** 17),
-                    offset=offset,
-                    scale=scale
-                )
+            if not os.path.isdir(mesh_dir):
+                os.makedirs(mesh_dir)
 
+            mesh_filename = os.path.join(mesh_dir, instance_name)
+
+            offset = None
+            scale = None
+
+            if not keep_normalized:
+
+                normalization_params = np.load(
+                    ws.get_normalization_params_filename(
+                        data_source, dataset_name, class_name, instance_name
+                    )
+                )
+                offset = normalization_params["offset"]
+                scale = normalization_params["scale"]
+
+            if (view_id == -1):
+                view_selected = random.randint(0,49)
+                print(f"pick view {view_selected}")
+            else:
+                view_selected = view_id
+            
+
+
+            # pick a view to encode, also copy the image to the current directory
+            shutil.copy2(instance_images[i][view_selected], mesh_filename+'.png')
+            instance_image = read_image(instance_images[i][view_selected]).unsqueeze(0).cuda()
+            with torch.no_grad():
+                latent_vector = encoder(instance_image)
+            if use_octree:
+                with torch.no_grad():
+                    deep_sdf.mesh.create_mesh_octree(
+                        decoder,
+                        latent_vector,
+                        mesh_filename,
+                        N=resolution,
+                        max_batch=int(2 ** 17),
+                        offset=offset,
+                        scale=scale,
+                        clamp_func=clamping_function
+                    )
+            else:
+                with torch.no_grad():
+                    deep_sdf.mesh.create_mesh(
+                        decoder,
+                        latent_vector,
+                        mesh_filename,
+                        N=resolution,
+                        max_batch=int(2 ** 17),
+                        offset=offset,
+                        scale=scale
+                    )
+        except Exception as e:
+            print(e)
         if i >= end_id:
             break
 
