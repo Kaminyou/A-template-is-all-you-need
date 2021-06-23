@@ -260,7 +260,7 @@ if __name__ == "__main__":
         dest="view_id",
         type=int,
         default=30,
-        help="Which view of all the rgb images to encode.",
+        help="Which view of all the rgb images to encode. (-1: random view)",
     )
     arg_parser.add_argument(
         "--mode",
