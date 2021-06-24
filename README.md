@@ -1,5 +1,6 @@
 # Template-is-all-you-need
-Template is all you need: 2D to 3D reconstruction with template learned by contrastive learning
+Template is all you need: 2D to 3D reconstruction with template learned by contrastive learning<br>
+[Presentation link](https://www.youtube.com/watch?v=TvMIE-EjeD8) (mandarin)
 
 ## Prepare required data
 **You must have a GUI for 2D image and SDF rendering!!** <br>
