@@ -13,7 +13,7 @@ import torchvision.transforms as transforms
 import sys
 import deep_sdf
 import deep_sdf.workspace as ws
-from networks.encoder import Encoder
+from networks.encoder import Encoder, _Encoder
 
 import shutil
 
@@ -74,14 +74,17 @@ def code_to_mesh(experiment_directory, checkpoint, image_path, use_octree=True, 
     #===========================================================================
     #                   Use Encoder to replace embedding                       #
     #===========================================================================
-    encoder = Encoder(latent_size=latent_size)
-    #encoder = torch.nn.DataParallel(encoder)
-
     saved_model_state = torch.load(
         os.path.join(experiment_directory, ws.latent_codes_subdir, checkpoint + ".pth")
     )
 
-    encoder.load_state_dict(saved_model_state["latent_codes"])
+    try:
+        encoder = Encoder(latent_size=latent_size)
+        encoder.load_state_dict(saved_model_state["latent_codes"])
+    except:
+        encoder = _Encoder(latent_size=latent_size)
+        encoder = torch.nn.DataParallel(encoder)
+        encoder.load_state_dict(saved_model_state["latent_codes"])
 
     encoder = encoder.cuda()
 
