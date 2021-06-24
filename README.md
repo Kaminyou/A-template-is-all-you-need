@@ -1,5 +1,9 @@
 # Template-is-all-you-need
 Template is all you need: 2D to 3D reconstruction with template learned by contrastive learning<br>
+![Phase 1](./imgs/Phase_1.png)
+![Phase 2](./imgs/Phase_2.png)
+
+## Presentation
 [Presentation link](https://www.youtube.com/watch?v=TvMIE-EjeD8) (mandarin)
 
 ## Prepare required data
