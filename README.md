@@ -268,7 +268,7 @@ python evaluate.py -c sofas -d ./data/ -i examples/sofas_dit/TrainingMeshes/2000
 ## 8. Analyze
 1. To analyze the pretrained embedding
 ```
-python analyze.py -e examples/sofas_dit -p --thread 16
+python analyze.py -e examples/${obj}_dit -p --thread 16
 ```
 2. To analyze the embedding yield from own encoder
 - *`early_stop` is to prevent the time-consuming inference process and only extract some data for analysis*
