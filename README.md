@@ -3,14 +3,16 @@ Template is all you need: 2D to 3D reconstruction with template learned by contr
 ![Phase 1](./imgs/Phase_1.png)
 ![Phase 2](./imgs/Phase_2.png)
 
-## Presentation
-[Presentation link](https://www.youtube.com/watch?v=TvMIE-EjeD8) (mandarin)
+## Presentation and report
+- [Presentation link](https://www.youtube.com/watch?v=TvMIE-EjeD8) (mandarin)
+- [Report link](./report/109_2_3DDLCV_FINAL.pdf)
 
-## Prepare required data
+
+## 1. Prepare required data
 **You must have a GUI for 2D image and SDF rendering!!** <br>
 *Environment of Ubuntu with GUI is recommended.* <br>
-*If you are unable to generate required 2D images and SDF ground truth, please jump to next section. We do provide some examples for you to download*
-### Prepare ShapeNet dataset
+*If you are unable to generate required 2D images and SDF ground truth, please jump to next section. We do provide some examples for you to download.*
+### 1.1 Prepare ShapeNet dataset
 1. Please prepare `secret.json`, which should include:
 ```json
 {"pascal_root":"path-to-save-PASCAL3D+_release1.1.zip",
@@ -24,7 +26,7 @@ Template is all you need: 2D to 3D reconstruction with template learned by contr
 python3 initialize.py
 ```
 
-### Render 2D images
+### 1.2 Render 2D images
 The code is heavily based on [link](https://github.com/Xharlie/ShapenetRender_more_variation). However, only `images` and `albedo` defined there will be generated. You **should build the environment accurately first to avoid any erroneous 2D image rendering**!
 1. Download [blender](https://download.blender.org/release/Blender2.79/) v2.79. You **must use v2.79** because some functions are deprecated in the latest version.
 2. Test if the command `blender` works or not.
@@ -47,34 +49,16 @@ blender
 python batch.py --jsons_root $jsons_root --data_root $data_root --output_root $output_root
 ```
 
-### Render ground truth SDF 
+### 1.3 Render ground truth SDF and PLY
 Please refer to [link](https://blog.csdn.net/qq_38677322/article/details/110957634). In short, dependencies of `CLI11`, `Pangolin`, `nanoflann`, and `Eigen3` should be built first. However, the whole process is arduous and various bugs do exist!
 
-### Covert 2D image from RGBA to RGB
+### 1.4 Covert 2D image from RGBA to RGB
 ```script
 python rgba2rgb.py -d [data_source] -c 'chairs', --level 'easy'
 ```
 
-## Downloading data
-### Small examples
-The training data of chairs `03001627_train.tar.gz` can be downloaded from 
-[this link](https://drive.google.com/file/d/17j9uOb3cVXm4sqHcRcgkPBFdCmsYAv3J/view?usp=sharing). 
-There will be a folder named `03001627` when the file is extracted.  
-
-To download the file and merge all the extracted data to your dataset folder, run  
-```bash
-bash download_chairs_train.sh [data_source_name]  
-```  
-where `[data_source_name]` should be the path to yor dataset folder. 
-To be more explicit, it should be the parent folder of `SdfSamples`. 
-Therefore, before running this script, please make sure that all the other data has been prepared 
-and the folder structure is the same as the one specified in [Data Layouts](https://github.com/Kaminyou/Template-is-all-you-need#data-layouts).     
-
-For example, run  
-```bash
-bash download_chairs_train.sh data/  
-```  
-### Complete examples
+## 2. Downloading data and pretrained models
+### 2.1 Complete examples (RECOMMENDED)
 [gdown](https://pypi.org/project/gdown/) is recommended for downloading these pre-generated 2D images and SDF ground truth.
 ```script
 pip install gdown
@@ -111,7 +95,38 @@ gdown --id 1F7xs-3v0yA0IcIhEn5AaeKdaAEaZYlOA #03001627 chairs
 gdown --id 1vI0qsAtJ2kwSx8KpyH9sJu_2fCGh1DOu #04256520 sofas
 ```
 
-## Data Layouts
+#### Pretrained models
+```script
+gdown --id 1cLW_B_EmhQNeM-pJ2iJIKGFdf7Cyzk6E #planes #end2end with contrastive
+gdown --id 11kGrEJqINyfqwcT0aIEoHRC2uwgcz_GF #planes #two phases
+gdown --id 1GXpNWaz5njg8x1zC9Ntf83CDfsRtSGdS #chairs #end2end
+gdown --id 1bN3B4ws-PXd1kmCrkGSl_4VAcgRgfK7I #chairs #two phases
+gdown --id 1lq1-cK86g10EK53E4gskUwnqc-zd9n7p #sofas #end2end
+gdown --id 10I4sWk6XjfV6koe00jUkUmhi792YQ-Ot #sofas #two phases
+```
+
+
+### 2.2 Small examples
+The training data of chairs `03001627_train.tar.gz` can be downloaded from 
+[this link](https://drive.google.com/file/d/17j9uOb3cVXm4sqHcRcgkPBFdCmsYAv3J/view?usp=sharing). 
+There will be a folder named `03001627` when the file is extracted.  
+
+To download the file and merge all the extracted data to your dataset folder, run  
+```bash
+bash download_chairs_train.sh [data_source_name]  
+```  
+where `[data_source_name]` should be the path to yor dataset folder. 
+To be more explicit, it should be the parent folder of `SdfSamples`. 
+Therefore, before running this script, please make sure that all the other data has been prepared 
+and the folder structure is the same as the one specified in [Data Layouts](https://github.com/Kaminyou/Template-is-all-you-need#data-layouts).     
+
+For example, run  
+```bash
+bash download_chairs_train.sh data/  
+```  
+
+## 3. Data Layouts
+**The data must be organized as the following hierarchical structure.**
 ```script
 <data_source_name>/
     .datasources.json
@@ -143,20 +158,23 @@ gdown --id 1vI0qsAtJ2kwSx8KpyH9sJu_2fCGh1DOu #04256520 sofas
                      .
                               
 ```
-## Extract pretrained embedding
+## 4. Extract pretrained embedding
 Please use `extract_embedding.py` in the environment of [Deep Implicit Template](https://github.com/ZhengZerong/DeepImplicitTemplates/tree/db65db3c22e0f5111236e48deab7cffb38bd60c3). This code will automatically extract the embedding from the pretrained `Embedding` weights and store in a dictionary, which can be accessed by the `instance_name`.
 ```
 python generate_training_meshes.py -e ./pretrained/${obj}_dit
 ```
 We also provided the pre-extracted one in `./pretrained_embedding/` folder.
 
-## Encoders
+## 5. Training
+### 5.1 Two-phase training
+*Please use the original code in deep implicit template to conduct phase-1 training.*
+#### Train the encoder (phase 2)
+```script
+python train_solution1.py -e pretrained/chairs_dit/ -d ./data/
+```
 
-Encoders that apply different contrastive learning frameworks can be found in 
-the folder `contrastive/encoders`.  
-For more details please refer to [ENCODER.md](contrastive/encoders/ENCODER.md).  
-
-## Training
+### 5.2 End-to-end training
+#### **Version 1**
 ```script
 python train_deep_implicit_templates.py -e examples/cars_dit --debug --batch_split 2 -d ./data
 ```
@@ -165,7 +183,7 @@ python train_deep_implicit_templates.py -e examples/cars_dit --debug --batch_spl
 ```script
 python train_deep_implicit_templates.py -e examples/cars_dit --debug --batch_split 2 -d ./data --mixed_precision --mixed_precision_level O1
 ```
-Plese note that `mixed_precision_level` has three options, `O0`, `O1`, `O2`, `O3`, corresponding to different settings. 
+Plese note that `mixed_precision_level` has four options, `O0`, `O1`, `O2`, `O3`, corresponding to different settings. 
 - `O0`: FP32 training
 - `O1`: Mixed Precision (recommended for typical use)
 - `O2`: “Almost FP16” Mixed Precision
@@ -176,14 +194,7 @@ If you cannot successfully install `apex` from pypl. Please refer to [link](http
 ```script
 --apex_path path_to_apex
 ```
-
-### Pre-train encoder
-```script
-python train_solution1.py -e pretrained/chairs_dit/ -d ./data/
-```
-
-### Updates
-
+#### **Version 2**
 ```script
 python train_deep_implicit_templates_v2.py \
 -e examples/cars_dit \
@@ -207,7 +218,11 @@ python train_deep_implicit_templates_v2.py \
 We can eventually replace `train_deep_implicit_templates.py` with `train_deep_implicit_templates_v2.py` if everyone has 
 no problem running this version of training code.  
 
-## Contrastive learning
+
+### 5.3 Pretrained encoder with Contrastive learning
+Encoders that apply different contrastive learning frameworks can be found in 
+the folder `contrastive/encoders`.  
+For more details please refer to [ENCODER.md](contrastive/encoders/ENCODER.md).  
 
 Run the following to perform contrastive learning: 
 ```script
@@ -220,7 +235,7 @@ An example of `config.yaml` can be found [here](contrastive/config.yaml).
 To use the pretrained weights for the later deep implicit templates training, please refer to 
 [ENCODER.md](contrastive/encoders/ENCODER.md).
 
-## Generate meshes
+## 6. Generate meshes
 
 ```script
 GPU_ID=0
@@ -228,7 +243,7 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python generate_template_mesh.py -e pretrained/so
 CUDA_VISIBLE_DEVICES=${GPU_ID} python generate_training_meshes.py -e pretrained/sofas_dit --debug --start_id 0 --end_id 20 --octree --keep_normalization
 ```
 
-## Evaluate
+## 7. Evaluate
 ```script
 python evaluate.py -c $class_name -d $data_src -i $mesh_output_folder
 ```
@@ -237,7 +252,7 @@ e.g.
 python evaluate.py -c sofas -d ./data/ -i examples/sofas_dit/TrainingMeshes/2000/ShapeNetV2/04256520/
 ```
 
-## Analyze
+## 8. Analyze
 1. To analyze the pretrained embedding
 ```
 python analyze.py -e examples/sofas_dit -p --thread 16
