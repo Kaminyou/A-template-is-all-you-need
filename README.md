@@ -168,7 +168,7 @@ We also provided the pre-extracted one in `./pretrained_embedding/` folder.
 
 ## 5. Training
 ### 5.1 Two-phase training
-*Please use the original code in deep implicit template to conduct phase-1 training.*
+*Phase-1 training can also be conducted by the original code in deep implicit template. However, the required embedding obtained in this step has been provided in `./pretrained_embedding/` and our program will directly load the embedding there. Thus, you don't need to do the phase-1 training but need to copy the pretrained models of wrapping and SDF network provided [here](https://github.com/ZhengZerong/DeepImplicitTemplates/tree/db65db3c22e0f5111236e48deab7cffb38bd60c3/pretrained). Please prepare `/ModelParameters/latest.pth` for every object category.*
 #### Train the encoder (phase 2)
 ```script
 python train_solution1.py -e pretrained/${obj}_dit/ -d ./data/
