@@ -170,18 +170,18 @@ We also provided the pre-extracted one in `./pretrained_embedding/` folder.
 *Please use the original code in deep implicit template to conduct phase-1 training.*
 #### Train the encoder (phase 2)
 ```script
-python train_solution1.py -e pretrained/chairs_dit/ -d ./data/
+python train_solution1.py -e pretrained/${obj}_dit/ -d ./data/
 ```
 
 ### 5.2 End-to-end training
 #### **Version 1**
 ```script
-python train_deep_implicit_templates.py -e examples/cars_dit --debug --batch_split 2 -d ./data
+python train_deep_implicit_templates.py -e examples/${obj}_dit --debug --batch_split 2 -d ./data
 ```
 **To expedite training, the mixed precision mode is provided:**<br>
 *Package [apex](https://pypi.org/project/apex/) is required! Please make sure that you have installed it first!*
 ```script
-python train_deep_implicit_templates.py -e examples/cars_dit --debug --batch_split 2 -d ./data --mixed_precision --mixed_precision_level O1
+python train_deep_implicit_templates.py -e examples/${obj}_dit --debug --batch_split 2 -d ./data --mixed_precision --mixed_precision_level O1
 ```
 Plese note that `mixed_precision_level` has four options, `O0`, `O1`, `O2`, `O3`, corresponding to different settings. 
 - `O0`: FP32 training
@@ -197,7 +197,7 @@ If you cannot successfully install `apex` from pypl. Please refer to [link](http
 #### **Version 2**
 ```script
 python train_deep_implicit_templates_v2.py \
--e examples/cars_dit \
+-e examples/${obj}_dit \
 --debug \
 --batch_split 2 \
 -d ./data \
@@ -239,8 +239,8 @@ To use the pretrained weights for the later deep implicit templates training, pl
 
 ```script
 GPU_ID=0
-CUDA_VISIBLE_DEVICES=${GPU_ID} python generate_template_mesh.py -e pretrained/sofas_dit --debug 
-CUDA_VISIBLE_DEVICES=${GPU_ID} python generate_training_meshes.py -e pretrained/sofas_dit --debug --start_id 0 --end_id 20 --octree --keep_normalization
+CUDA_VISIBLE_DEVICES=${GPU_ID} python generate_template_mesh.py -e pretrained/${obj}_dit --debug 
+CUDA_VISIBLE_DEVICES=${GPU_ID} python generate_training_meshes.py -e pretrained/${obj}_dit --debug --start_id 0 --end_id 20 --octree --keep_normalization
 ```
 
 ## 7. Evaluate
@@ -260,7 +260,7 @@ python analyze.py -e examples/sofas_dit -p --thread 16
 2. To analyze the embedding yield from own encoder
 - *`early_stop` is to prevent the time-consuming inference process and only extract some data for analysis*
 ```
-python analyze.py -e examples/sofas_dit -d $data_path -c latest --early_stop 20 --thread 16
+python analyze.py -e examples/${obj}_dit -d $data_path -c latest --early_stop 20 --thread 16
 ```
 
 ## Acknowledgements
