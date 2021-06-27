@@ -237,11 +237,23 @@ To use the pretrained weights for the later deep implicit templates training, pl
 [ENCODER.md](contrastive/encoders/ENCODER.md).
 
 ## 6. Generate meshes
-
+### 6.1 Template
 ```script
-GPU_ID=0
-CUDA_VISIBLE_DEVICES=${GPU_ID} python generate_template_mesh.py -e pretrained/${obj}_dit --debug 
-CUDA_VISIBLE_DEVICES=${GPU_ID} python generate_training_meshes.py -e pretrained/${obj}_dit --debug --start_id 0 --end_id 20 --octree --keep_normalization
+python generate_template_mesh.py -e examples/${obj}_dit --debug 
+```
+### 6.2 Training data
+`view_id` starts from `0` to `50`. If it is set to `-1`, random `view_id` will be selected for each instance. 
+```
+python generate_training_meshes.py -e examples/${obj}_dit --debug --start_id 0 --end_id 20 --octree --keep_normalization --view_id $id
+```
+### 6.3 Testing data
+`view_id` starts from `0` to `50`. If it is set to `-1`, random `view_id` will be selected for each instance. 
+```
+python generate_training_meshes.py -e examples/${obj}_dit --debug --start_id 0 --end_id 20 --octree --keep_normalization --mode test --view_id $id
+```
+### 6.4 Real-world images
+```
+python generate_general_meshes.py -e examples/${obj}_dit --octree --image_path $where_you_put_the_real_world_images
 ```
 
 ## 7. Evaluate
