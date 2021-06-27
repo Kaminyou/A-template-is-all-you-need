@@ -6,6 +6,7 @@ Template is all you need: 2D to 3D reconstruction with template learned by contr
 ## Presentation and report
 - [Presentation link](https://www.youtube.com/watch?v=TvMIE-EjeD8) (mandarin)
 - [Report link](./report/109_2_3DDLCV_FINAL.pdf)
+- [Slide link](./report/slide.pdf)
 
 
 ## 1. Prepare required data
